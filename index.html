@@ -149,7 +149,7 @@
   /* ===== record crate (left playlist rail) ===== */
   .crate {
     position: relative;
-    width: 190px;
+    width: 240px;
     height: 420px;
     max-height: min(70vh, 460px);
     background: linear-gradient(180deg, #402d1f 0%, var(--walnut-dark) 100%);
@@ -173,7 +173,6 @@
     text-transform: uppercase;
     z-index: 30;
     pointer-events: none;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.9);
   }
   .crate-scroll {
     height: 100%;
@@ -185,57 +184,76 @@
     padding-top: 26px;
   }
   .crate-scroll::-webkit-scrollbar { display: none; }
-  .crate-pad {
-    height: 4px;
-  }
-  .crate-pad:last-child {
-    height: 70%;
-  }
+  .crate-pad { height: 6px; }
+  .crate-pad:last-child { height: 30px; }
 
-  /* fanned stack of album sleeves: each card shows nearly its full face,
-     with only the next card's edge tucked slightly underneath it */
+  /* simple, crisp vertical list: square cover (with a subtle stacked-record
+     depth effect behind it) on the left, track name on the right */
   .record-item {
     scroll-snap-align: start;
     position: relative;
-    width: calc(100% - 20px);
-    margin: 0 10px;
-    aspect-ratio: 16 / 10;
-    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: calc(100% - 24px);
+    margin: 0 12px 18px;
+    padding: 6px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .record-item .mini-disc {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 7px;
     background-size: cover;
     background-position: center;
     background-color: var(--felt);
-    border: 1px solid rgba(0,0,0,0.6);
-    box-shadow: 0 10px 22px rgba(0,0,0,0.55);
-    cursor: pointer;
-    transform-origin: 50% 0%;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
-  .record-item:not(:first-child) {
-    margin-top: -46px;
+  /* two faint offset squares behind the cover give it a stacked, dimensional
+     "record sleeve" feel without the jank of overlapping DOM cards */
+  .record-item .mini-disc::before,
+  .record-item .mini-disc::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 7px;
+    background: #17110c;
+    z-index: -1;
+  }
+  .record-item .mini-disc::before {
+    transform: translate(4px, 4px) rotate(4deg);
+    opacity: 0.75;
+  }
+  .record-item .mini-disc::after {
+    transform: translate(8px, 7px) rotate(-4deg);
+    opacity: 0.45;
   }
   .record-item .mini-name {
-    position: absolute;
-    left: 0; right: 0; bottom: 0;
-    padding: 24px 10px 8px;
-    font-size: 11px;
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.3;
     color: var(--cream-dim);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    background: linear-gradient(180deg, rgba(12,9,6,0) 0%, rgba(10,8,5,0.92) 85%);
-    border-radius: 0 0 12px 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     transition: color 0.15s ease, font-weight 0.15s ease;
   }
   .record-item.active {
-    z-index: 20;
-    transform: scale(1.04);
-    box-shadow: 0 16px 32px rgba(0,0,0,0.65), 0 0 0 2px var(--brass);
+    background: rgba(216,168,92,0.1);
+  }
+  .record-item.active .mini-disc {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6), 0 0 0 2px var(--brass);
   }
   .record-item.active .mini-name {
     color: var(--brass-bright);
     font-weight: 700;
-    white-space: normal;
-    line-height: 1.25;
   }
 
   /* ===== turntable console ===== */
@@ -297,10 +315,13 @@
   .disc.playing { animation-play-state: running; }
 
   /* the album cover now fills nearly the entire record, leaving only a
-     thin black groove ring showing at the outer edge */
+     thin black groove ring showing at the outer edge. aspect-ratio:1 is
+     forced here so the circle can never be computed against a non-square
+     box, and both the wrapper and the image itself are clipped to a
+     circle as a safety net. */
   .label {
     width: 92%;
-    height: 92%;
+    aspect-ratio: 1 / 1;
     border-radius: 50%;
     overflow: hidden;
     clip-path: circle(50% at 50% 50%);
@@ -308,22 +329,23 @@
     border: 2px solid rgba(0,0,0,0.5);
     box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 3px 16px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,0,0,0.35);
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-shrink: 0;
   }
   .label img {
-    position: absolute;
-    inset: 0;
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center;
     border-radius: 50%;
-    display: block;
+    clip-path: circle(50% at 50% 50%);
   }
   .label::after {
     content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 8%;
     height: 8%;
     border-radius: 50%;
@@ -464,33 +486,9 @@
   @media (max-width: 620px) {
     .rig { flex-direction: column-reverse; align-items: center; }
     .crate {
-      width: min(92vw, 340px);
-      height: 148px;
+      width: min(92vw, 400px);
+      height: 220px;
     }
-    .crate-scroll {
-      overflow-x: auto;
-      overflow-y: hidden;
-      scroll-snap-type: x proximity;
-      display: flex;
-      align-items: center;
-      height: 100%;
-      padding-top: 0;
-      padding-left: 20px;
-    }
-    .crate-pad { height: auto; width: 4px; flex-shrink: 0; }
-    .crate-pad:last-child { width: 60%; }
-    .record-item {
-      flex-shrink: 0;
-      width: 150px;
-      aspect-ratio: 4 / 3;
-      margin: 0;
-      transform-origin: 0% 50%;
-    }
-    .record-item:not(:first-child) {
-      margin-top: 0;
-      margin-left: -70px;
-    }
-    .record-item.active { transform: scale(1.06); }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -791,8 +789,10 @@
     ids.forEach((videoId, idx) => {
       const item = document.createElement('div');
       item.className = 'record-item';
-      item.style.backgroundImage = 'url(https://img.youtube.com/vi/' + videoId + '/mqdefault.jpg)';
-      item.innerHTML = '<div class="mini-name">第 ' + (idx + 1) + ' 首</div>';
+      item.innerHTML =
+        '<div class="mini-disc" style="background-image:url(https://img.youtube.com/vi/' +
+        videoId + '/mqdefault.jpg)"></div>' +
+        '<div class="mini-name">第 ' + (idx + 1) + ' 首</div>';
       item.addEventListener('click', () => {
         if (isReady) player.playVideoAt(idx);
       });
@@ -826,25 +826,19 @@
     syncCrateToPlayer();
   }
 
-  function isVerticalCrate() {
-    return window.innerWidth > 620;
-  }
-
-  // Only the actively-playing card is highlighted (via the .active class in
-  // syncCrateToPlayer); the stack itself stays static so cards read cleanly
-  // as a fanned deck instead of jittering during scroll.
+  // Only the actively-playing row is highlighted (via the .active class in
+  // syncCrateToPlayer); the list itself stays a plain, crisp vertical stack.
 
   function selectNearestCrateItem() {
     if (!crateItems.length) return;
     const containerRect = els.crateScroll.getBoundingClientRect();
-    const originPos = isVerticalCrate() ? containerRect.top + 30 : containerRect.left + 30;
+    const originPos = containerRect.top + 30;
 
     let nearestIdx = -1;
     let nearestDist = Infinity;
     crateItems.forEach(function (entry, idx) {
       const r = entry.el.getBoundingClientRect();
-      const itemPos = isVerticalCrate() ? r.top : r.left;
-      const dist = Math.abs(itemPos - originPos);
+      const dist = Math.abs(r.top - originPos);
       if (dist < nearestDist) { nearestDist = dist; nearestIdx = idx; }
     });
 
@@ -871,8 +865,8 @@
       programmaticScroll = true;
       crateItems[idx].el.scrollIntoView({
         behavior: 'smooth',
-        block: isVerticalCrate() ? 'start' : 'nearest',
-        inline: isVerticalCrate() ? 'nearest' : 'start',
+        block: 'start',
+        inline: 'nearest',
       });
       setTimeout(function () { programmaticScroll = false; }, 500);
     }
