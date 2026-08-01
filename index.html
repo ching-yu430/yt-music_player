@@ -211,10 +211,19 @@
     background-position: center;
     background-color: var(--felt);
     position: relative;
+    z-index: 0;
+    isolation: isolate; /* gives this element its own stacking context, so
+      the ::before/::after negative z-index sleeves are always sandwiched
+      directly behind the cover art - never lost behind neighbouring rows
+      or the crate's own background. */
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
-  /* two faint offset squares behind the cover give it a stacked, dimensional
-     "record sleeve" feel without the jank of overlapping DOM cards */
+  /* two faint, rotated, offset squares behind the cover build up a
+     "stack of records" (cover + these 2 = 3 layers total) - each one a
+     little further back, a little more rotated, and a little dimmer,
+     like sleeves peeking out from under the top cover. A thin lighter
+     edge on each keeps every layer readable as a distinct record rather
+     than one blurry shadow. */
   .record-item .mini-disc::before,
   .record-item .mini-disc::after {
     content: '';
@@ -222,15 +231,17 @@
     inset: 0;
     border-radius: 7px;
     background: #17110c;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(242,232,213,0.06);
     z-index: -1;
   }
   .record-item .mini-disc::before {
-    transform: translate(4px, 4px) rotate(4deg);
-    opacity: 0.75;
+    transform: translate(5px, 5px) rotate(6deg);
+    opacity: 0.8;
   }
   .record-item .mini-disc::after {
-    transform: translate(8px, 7px) rotate(-4deg);
-    opacity: 0.45;
+    transform: translate(10px, 9px) rotate(-7deg);
+    opacity: 0.5;
+    background: #120d09;
   }
   .record-item .mini-name {
     flex: 1;
@@ -301,6 +312,7 @@
     position: absolute;
     inset: 4%;
     border-radius: 50%;
+    overflow: hidden;
     background:
       repeating-radial-gradient(circle at 50% 50%,
         #0c0c0c 0px, #0c0c0c 2px,
@@ -314,22 +326,33 @@
   }
   .disc.playing { animation-play-state: running; }
 
-  /* the album cover now fills nearly the entire record, leaving only a
-     thin black groove ring showing at the outer edge. aspect-ratio:1 is
-     forced here so the circle can never be computed against a non-square
-     box, and both the wrapper and the image itself are clipped to a
-     circle as a safety net. */
+  /* the album cover fills nearly the entire record, leaving only a thin
+     black groove ring showing at the outer edge. .label-frame is an
+     absolutely-positioned square (equal inset on all sides of the
+     already-square .disc), so its dimensions never depend on
+     aspect-ratio support or flex sizing quirks - it is guaranteed to be
+     a square no matter what. .label sits inside it at 100% width/height
+     and is clipped to a circle twice over (border-radius + clip-path)
+     as a belt-and-braces safety net, and the <img> itself repeats the
+     same double clip and always uses object-fit:cover so any source
+     photo - portrait, landscape, or non-square - is first cropped to a
+     square and then punched into a perfect circle. */
+  .label-frame {
+    position: absolute;
+    inset: 4%;
+    border-radius: 50%;
+  }
   .label {
-    width: 92%;
-    aspect-ratio: 1 / 1;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     overflow: hidden;
     clip-path: circle(50% at 50% 50%);
+    -webkit-clip-path: circle(50% at 50% 50%);
     background-color: var(--felt);
     border: 2px solid rgba(0,0,0,0.5);
     box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 3px 16px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,0,0,0.35);
     position: relative;
-    flex-shrink: 0;
   }
   .label img {
     display: block;
@@ -339,6 +362,7 @@
     object-position: center;
     border-radius: 50%;
     clip-path: circle(50% at 50% 50%);
+    -webkit-clip-path: circle(50% at 50% 50%);
   }
   .label::after {
     content: '';
@@ -535,7 +559,9 @@
       <div class="platter-wrap">
         <div class="mat"></div>
         <div class="disc" id="disc">
-          <div class="label" id="albumLabel"><img id="albumImg" alt=""></div>
+          <div class="label-frame">
+            <div class="label" id="albumLabel"><img id="albumImg" alt=""></div>
+          </div>
         </div>
         <div class="tonearm" id="tonearm">
           <svg viewBox="0 0 100 100">
