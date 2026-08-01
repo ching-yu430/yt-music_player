@@ -322,31 +322,49 @@
     position: absolute;
     inset: 4%;
     border-radius: 50%;
-    overflow: hidden;
+    overflow: hidden; /* the circular clip boundary lives here, on an
+      element that NEVER transforms - this is the fix. Previously the
+      spin animation and the circular clip were on the same element;
+      under GPU compositing, an animated (rotating) clip mask can
+      occasionally fail to keep up with every frame, letting the square
+      cover art "leak" past the circle mid-spin (exactly what showed up
+      in the screenshot). By keeping this clip fully static and moving
+      the rotation to a separate inner layer (.disc-spin) below, the
+      browser only ever has to clip a shape that isn't itself moving -
+      the simplest, most reliable form of clipping - so the cover is
+      guaranteed to render as a perfect circle at every single frame. */
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 40px rgba(0,0,0,0.6);
+  }
+
+  .disc-spin {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
     background:
       repeating-radial-gradient(circle at 50% 50%,
         #0c0c0c 0px, #0c0c0c 2px,
         #171717 3px, #171717 4px);
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 40px rgba(0,0,0,0.6);
     animation: spin 6s linear infinite;
     animation-play-state: paused;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .disc.playing { animation-play-state: running; }
+  .disc.playing .disc-spin { animation-play-state: running; }
 
   /* the album cover fills nearly the entire record, leaving only a thin
      black groove ring showing at the outer edge. .label-frame is an
      absolutely-positioned square (equal inset on all sides of the
-     already-square .disc), so its dimensions never depend on
+     already-square .disc-spin), so its dimensions never depend on
      aspect-ratio support or flex sizing quirks - it is guaranteed to be
      a square no matter what. .label sits inside it at 100% width/height
      and is clipped to a circle twice over (border-radius + clip-path)
      as a belt-and-braces safety net, and the <img> itself repeats the
      same double clip and always uses object-fit:cover so any source
      photo - portrait, landscape, or non-square - is first cropped to a
-     square and then punched into a perfect circle. */
+     square and then punched into a perfect circle. All of this sits
+     inside the ROTATING layer, while the actual circular clip boundary
+     (the .disc element above) stays static - see the comment on .disc. */
   .label-frame {
     position: absolute;
     inset: 4%;
@@ -526,7 +544,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .disc.playing { animation: none; }
+    .disc-spin { animation: none; }
     .tonearm { transition: none; }
   }
 </style>
@@ -569,8 +587,10 @@
       <div class="platter-wrap">
         <div class="mat"></div>
         <div class="disc" id="disc">
-          <div class="label-frame">
-            <div class="label" id="albumLabel"><img id="albumImg" alt=""></div>
+          <div class="disc-spin">
+            <div class="label-frame">
+              <div class="label" id="albumLabel"><img id="albumImg" alt=""></div>
+            </div>
           </div>
         </div>
         <div class="tonearm" id="tonearm">
