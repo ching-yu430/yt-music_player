@@ -206,16 +206,26 @@
     flex-shrink: 0;
     width: 56px;
     height: 56px;
+    position: relative;
+    z-index: 0; /* establishes a stacking context so the ::before/::after
+      negative z-index sleeves stay local to this item - never lost
+      behind neighbouring rows or the crate's own background - while the
+      actual cover art lives in its own child layer (below) that is
+      explicitly stacked above them. */
+  }
+  /* the real cover art is its own layer, explicitly stacked above the
+     offset sleeves below - this is what actually guarantees "squares
+     behind, cover in front", rather than relying on paint order of the
+     mini-disc's own background (which negative z-index children can
+     paint over). */
+  .record-item .mini-disc-cover {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
     border-radius: 7px;
     background-size: cover;
     background-position: center;
     background-color: var(--felt);
-    position: relative;
-    z-index: 0;
-    isolation: isolate; /* gives this element its own stacking context, so
-      the ::before/::after negative z-index sleeves are always sandwiched
-      directly behind the cover art - never lost behind neighbouring rows
-      or the crate's own background. */
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
   /* two faint, rotated, offset squares behind the cover build up a
@@ -259,7 +269,7 @@
   .record-item.active {
     background: rgba(216,168,92,0.1);
   }
-  .record-item.active .mini-disc {
+  .record-item.active .mini-disc-cover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.6), 0 0 0 2px var(--brass);
   }
   .record-item.active .mini-name {
@@ -816,8 +826,8 @@
       const item = document.createElement('div');
       item.className = 'record-item';
       item.innerHTML =
-        '<div class="mini-disc" style="background-image:url(https://img.youtube.com/vi/' +
-        videoId + '/mqdefault.jpg)"></div>' +
+        '<div class="mini-disc"><div class="mini-disc-cover" style="background-image:url(https://img.youtube.com/vi/' +
+        videoId + '/mqdefault.jpg)"></div></div>' +
         '<div class="mini-name">第 ' + (idx + 1) + ' 首</div>';
       item.addEventListener('click', () => {
         if (isReady) player.playVideoAt(idx);
