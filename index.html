@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>黑膠播放器</title>
+<style>
+  @font-face {
+    font-family: 'sys-serif';
+    src: local('Georgia');
+  }
+
+  :root {
+    --walnut-dark: #221812;
+    --walnut: #3a2a1e;
+    --walnut-light: #5c4530;
+    --felt: #8a1f1f;
+    --cream: #f2e8d5;
+    --cream-dim: #cbbfa4;
+    --brass: #b8874a;
+    --brass-bright: #d9a85c;
+    --shadow: rgba(0,0,0,0.55);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: radial-gradient(ellipse at 50% 20%, #2e2116 0%, #14100b 65%, #0a0806 100%);
+    font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    color: var(--cream);
+    overflow-x: hidden;
+  }
+
+  .stage {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px 48px;
+    gap: 20px;
+  }
+
+  .id-bar {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .id-bar input {
+    flex: 1;
+    background: #1c140e;
+    border: 1px solid var(--walnut-light);
+    color: var(--cream-dim);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  .id-bar input:focus { outline: 1px solid var(--brass); color: var(--cream); }
+  .id-bar button {
+    background: var(--brass);
+    color: #1c140e;
+    border: none;
+    border-radius: 6px;
+    padding: 0 16px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .id-bar button:hover { background: var(--brass-bright); }
+
+  .console {
+    position: relative;
+    width: min(92vw, 420px);
+    background:
+      linear-gradient(180deg, #4a3624 0%, var(--walnut) 45%, var(--walnut-dark) 100%);
+    border-radius: 18px;
+    padding: 28px 24px 22px;
+    box-shadow:
+      0 30px 60px var(--shadow),
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      inset 0 -6px 14px rgba(0,0,0,0.4);
+    border: 1px solid #1a120b;
+  }
+
+  .console::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(216,168,92,0.15);
+    pointer-events: none;
+  }
+
+  .platter-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mat {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, #2a2a2a 0%, #1a1a1a 70%, #111 100%);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 6px 18px rgba(0,0,0,0.6);
+  }
+
+  .disc {
+    position: absolute;
+    inset: 4%;
+    border-radius: 50%;
+    background:
+      repeating-radial-gradient(circle at 50% 50%,
+        #0c0c0c 0px, #0c0c0c 2px,
+        #171717 3px, #171717 4px);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 40px rgba(0,0,0,0.6);
+    animation: spin 6s linear infinite;
+    animation-play-state: paused;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .disc.playing { animation-play-state: running; }
+
+  .label {
+    width: 42%;
+    height: 42%;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--felt);
+    border: 2px solid rgba(0,0,0,0.4);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 3px 10px rgba(0,0,0,0.5);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .label::after {
+    content: '';
+    width: 14%;
+    height: 14%;
+    border-radius: 50%;
+    background: #0c0c0c;
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.8);
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .tonearm {
+    position: absolute;
+    top: -2%;
+    right: 2%;
+    width: 34%;
+    height: 34%;
+    transform-origin: 88% 12%;
+    transform: rotate(-18deg);
+    transition: transform 0.6s cubic-bezier(.4,0,.2,1);
+    z-index: 5;
+  }
+  .tonearm.down { transform: rotate(6deg); }
+
+  .tonearm svg { width: 100%; height: 100%; overflow: visible; }
+
+  .meta {
+    margin-top: 22px;
+    text-align: center;
+    min-height: 58px;
+  }
+  .track-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--cream);
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .track-artist {
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-family: 'SF Mono', Menlo, monospace;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .time {
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 10.5px;
+    color: var(--cream-dim);
+    width: 34px;
+    text-align: center;
+  }
+  .bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+  }
+  .bar-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: linear-gradient(90deg, var(--brass), var(--brass-bright));
+    border-radius: 2px;
+  }
+  .bar-knob {
+    position: absolute;
+    top: 50%;
+    width: 10px; height: 10px;
+    background: var(--brass-bright);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    left: 0%;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.3);
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    margin-top: 20px;
+  }
+  .ctrl-btn {
+    background: none;
+    border: none;
+    color: var(--cream);
+    cursor: pointer;
+    padding: 6px;
+    opacity: 0.85;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .ctrl-btn:hover { opacity: 1; transform: scale(1.08); }
+  .ctrl-btn.main {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--brass-bright), var(--brass));
+    color: #1c140e;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .ctrl-btn.main:hover { opacity: 1; }
+
+  .status-line {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    font-family: 'SF Mono', Menlo, monospace;
+    letter-spacing: 0.04em;
+    min-height: 14px;
+  }
+
+  #yt-host {
+    position: fixed;
+    width: 2px; height: 2px;
+    top: -10px; left: -10px;
+    opacity: 0.01;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .disc.playing { animation: none; }
+    .tonearm { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="id-bar">
+    <input id="playlistInput" type="text" placeholder="貼上播放清單 ID,例如 PLxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value="PLaLEwIkg0K_s">
+    <button id="loadBtn">載入</button>
+  </div>
+
+  <div class="console">
+    <div class="platter-wrap">
+      <div class="mat"></div>
+      <div class="disc" id="disc">
+        <div class="label" id="albumLabel"></div>
+      </div>
+      <div class="tonearm" id="tonearm">
+        <svg viewBox="0 0 100 100">
+          <circle cx="88" cy="12" r="7" fill="#c9a05a" stroke="#1c140e" stroke-width="1.5"/>
+          <line x1="88" y1="12" x2="18" y2="86" stroke="#c9a05a" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="18" cy="86" r="3.5" fill="#1c140e"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="track-title" id="trackTitle">尚未載入播放清單</div>
+      <div class="track-artist" id="trackArtist">—</div>
+    </div>
+
+    <div class="progress-row">
+      <span class="time" id="curTime">0:00</span>
+      <div class="bar" id="bar">
+        <div class="bar-fill" id="barFill"></div>
+        <div class="bar-knob" id="barKnob"></div>
+      </div>
+      <span class="time" id="durTime">0:00</span>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" id="prevBtn" title="上一首">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+      </button>
+      <button class="ctrl-btn main" id="playBtn" title="播放/暫停">
+        <svg id="playIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="pauseIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      </button>
+      <button class="ctrl-btn" id="nextBtn" title="下一首">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-9.5 6L15 18V6z"/></svg>
+      </button>
+    </div>
+
+    <div class="status-line" id="statusLine">準備就緒</div>
+  </div>
+
+</div>
+
+<div id="yt-host"><div id="yt-player"></div></div>
+
+<script>
+  let player;
+  let isReady = false;
+  let currentPlaylistId = document.getElementById('playlistInput').value.trim();
+  let progressTimer = null;
+
+  const els = {
+    disc: document.getElementById('disc'),
+    tonearm: document.getElementById('tonearm'),
+    albumLabel: document.getElementById('albumLabel'),
+    trackTitle: document.getElementById('trackTitle'),
+    trackArtist: document.getElementById('trackArtist'),
+    playBtn: document.getElementById('playBtn'),
+    playIcon: document.getElementById('playIcon'),
+    pauseIcon: document.getElementById('pauseIcon'),
+    prevBtn: document.getElementById('prevBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    bar: document.getElementById('bar'),
+    barFill: document.getElementById('barFill'),
+    barKnob: document.getElementById('barKnob'),
+    curTime: document.getElementById('curTime'),
+    durTime: document.getElementById('durTime'),
+    statusLine: document.getElementById('statusLine'),
+    playlistInput: document.getElementById('playlistInput'),
+    loadBtn: document.getElementById('loadBtn'),
+  };
+
+  function fmtTime(sec) {
+    if (!isFinite(sec) || sec < 0) sec = 0;
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  function setStatus(msg) { els.statusLine.textContent = msg; }
+
+  function loadYouTubeAPI() {
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.body.appendChild(tag);
+  }
+
+  window.onYouTubeIframeAPIReady = function () {
+    player = new YT.Player('yt-player', {
+      height: '1',
+      width: '1',
+      playerVars: {
+        listType: 'playlist',
+        list: currentPlaylistId,
+        playsinline: 1,
+      },
+      events: {
+        onReady: onPlayerReady,
+        onStateChange: onPlayerStateChange,
+        onError: onPlayerError,
+      }
+    });
+  };
+
+  function onPlayerReady() {
+    isReady = true;
+    setStatus('播放清單已載入,按下播放鍵開始');
+  }
+
+  function onPlayerError(e) {
+    const codes = {2:'影片 ID 無效',5:'無法在此播放器播放',100:'找不到影片或清單(可能為私人)',101:'上傳者不允許嵌入播放',150:'上傳者不允許嵌入播放'};
+    setStatus('錯誤: ' + (codes[e.data] || e.data));
+  }
+
+  function onPlayerStateChange(e) {
+    if (e.data === YT.PlayerState.PLAYING) {
+      els.disc.classList.add('playing');
+      els.tonearm.classList.add('down');
+      els.playIcon.style.display = 'none';
+      els.pauseIcon.style.display = '';
+      updateTrackMeta();
+      startProgressLoop();
+      setStatus('播放中');
+    } else if (e.data === YT.PlayerState.PAUSED) {
+      els.disc.classList.remove('playing');
+      els.tonearm.classList.remove('down');
+      els.playIcon.style.display = '';
+      els.pauseIcon.style.display = 'none';
+      stopProgressLoop();
+      setStatus('已暫停');
+    } else if (e.data === YT.PlayerState.ENDED) {
+      setStatus('這首結束,換下一首');
+    } else if (e.data === YT.PlayerState.CUED) {
+      updateTrackMeta();
+      setStatus('已就緒');
+    } else if (e.data === YT.PlayerState.BUFFERING) {
+      setStatus('緩衝中…');
+    }
+  }
+
+  function updateTrackMeta() {
+    try {
+      const data = player.getVideoData();
+      els.trackTitle.textContent = data.title || '未知曲目';
+      els.trackArtist.textContent = data.author || '';
+      if (data.video_id) {
+        els.albumLabel.style.backgroundImage =
+          `url(https://img.youtube.com/vi/${data.video_id}/hqdefault.jpg)`;
+      }
+    } catch (err) {}
+  }
+
+  function startProgressLoop() {
+    stopProgressLoop();
+    progressTimer = setInterval(() => {
+      if (!isReady) return;
+      const cur = player.getCurrentTime() || 0;
+      const dur = player.getDuration() || 0;
+      const pct = dur > 0 ? (cur / dur) * 100 : 0;
+      els.barFill.style.width = pct + '%';
+      els.barKnob.style.left = pct + '%';
+      els.curTime.textContent = fmtTime(cur);
+      els.durTime.textContent = fmtTime(dur);
+    }, 400);
+  }
+  function stopProgressLoop() {
+    if (progressTimer) clearInterval(progressTimer);
+    progressTimer = null;
+  }
+
+  els.playBtn.addEventListener('click', () => {
+    if (!isReady) return;
+    const state = player.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) player.pauseVideo();
+    else player.playVideo();
+  });
+
+  els.nextBtn.addEventListener('click', () => { if (isReady) player.nextVideo(); });
+  els.prevBtn.addEventListener('click', () => { if (isReady) player.previousVideo(); });
+
+  els.bar.addEventListener('click', (ev) => {
+    if (!isReady) return;
+    const rect = els.bar.getBoundingClientRect();
+    const pct = (ev.clientX - rect.left) / rect.width;
+    const dur = player.getDuration() || 0;
+    player.seekTo(dur * pct, true);
+  });
+
+  els.loadBtn.addEventListener('click', () => {
+    const val = els.playlistInput.value.trim();
+    if (!val) return;
+    currentPlaylistId = val;
+    stopProgressLoop();
+    els.disc.classList.remove('playing');
+    els.tonearm.classList.remove('down');
+    els.trackTitle.textContent = '載入中…';
+    els.trackArtist.textContent = '—';
+    if (isReady) {
+      player.loadPlaylist({ list: currentPlaylistId });
+    }
+  });
+
+  loadYouTubeAPI();
+</script>
+
+</body>
+</html>
