@@ -1,0 +1,17 @@
+{
+  "name": "黑膠播放器",
+  "short_name": "黑膠",
+  "description": "復古黑膠唱片播放器介面，播放 YouTube 音樂播放清單",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#231810",
+  "theme_color": "#231810",
+  "icons": [
+    {
+      "src": "icon-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
