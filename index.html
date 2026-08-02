@@ -59,8 +59,7 @@
     --fs-text-muted: rgba(58, 48, 40, 0.3);
     --brass: #A88650;
     --brass-bright: #8C6A35;
-    --shadow: rgba(80, 60, 40, 0.25);
-    --panel-shadow: 0 20px 50px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -4px 12px rgba(0,0,0,0.05);
+    --shadow: rgba(80, 60, 40, 0.35);
   }
   [data-theme="cream"] body { background: radial-gradient(ellipse at 50% 20%, #F5F0E6 0%, #E8DFD1 50%, #D4C9B8 100%); }
   [data-theme="cream"] .fs-overlay:fullscreen { background: linear-gradient(rgba(232,223,209,0.7), rgba(232,223,209,0.8)), radial-gradient(ellipse at 50% 20%, #F5F0E6 0%, #E8DFD1 50%, #D4C9B8 100%); }
@@ -86,26 +85,25 @@
 
   /* Theme: Retro Green */
   [data-theme="retro"] {
-    --espresso: #1B3527;
-    --dark-roast: #224231;
-    --americano: #29503B;
-    --mocha: #35664C;
-    --walnut: #427A5D;
-    --cinnamon: #529370;
+    --espresso: #0F2D1F;
+    --dark-roast: #143C2A;
+    --americano: #194C34;
+    --mocha: #206344;
+    --walnut: #277A54;
+    --cinnamon: #319969;
     --cream: #F0FDF4;
     --cream-dim: #D1FAE5;
     --cream-muted: #A7F3D0;
     --fs-text: #F0FDF4;
     --fs-text-dim: rgba(240,253,244,0.6);
     --fs-text-muted: rgba(240,253,244,0.3);
-    --brass: #FCD34D;
-    --brass-bright: #FDE68A;
+    --brass: #E0B84A;
+    --brass-bright: #F0D27E;
     --terracotta: #F87171;
-    --shadow: rgba(20, 60, 40, 0.4);
-    --panel-shadow: 0 20px 50px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -4px 12px rgba(0,0,0,0.25);
+    --shadow: rgba(15, 45, 31, 0.45);
   }
-  [data-theme="retro"] body { background: radial-gradient(ellipse at 50% 20%, #8FE3BA 0%, #65B892 50%, #459670 100%); }
-  [data-theme="retro"] .fs-overlay:fullscreen { background: linear-gradient(rgba(41,80,59,0.7), rgba(41,80,59,0.8)), radial-gradient(ellipse at 50% 20%, #8FE3BA 0%, #65B892 50%, #459670 100%); }
+  [data-theme="retro"] body { background: radial-gradient(ellipse at 50% 20%, #99D7BA 0%, #5ABE90 50%, #3A9269 100%); }
+  [data-theme="retro"] .fs-overlay:fullscreen { background: linear-gradient(rgba(25,76,52,0.7), rgba(25,76,52,0.8)), radial-gradient(ellipse at 50% 20%, #99D7BA 0%, #5ABE90 50%, #3A9269 100%); }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -149,14 +147,14 @@
   .settings-fab {
     position: fixed; top: 16px; right: 16px;
     width: 42px; height: 42px; border-radius: 50%;
-    background: linear-gradient(180deg, var(--brass-bright), var(--brass));
-    border: 1px solid var(--mocha);
-    color: var(--americano);
+    background: linear-gradient(180deg, var(--walnut) 0%, var(--mocha) 60%, var(--americano) 100%);
+    border: 1px solid var(--brass);
+    color: var(--brass-bright);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 14px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.3);
+    box-shadow: 0 4px 14px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.12);
     z-index: 50;
-    transition: transform .15s ease;
+    transition: transform .15s ease, background .3s ease, border-color .3s ease, color .3s ease;
   }
   .settings-fab:hover { transform: scale(1.08); }
 
@@ -649,11 +647,12 @@
     box-shadow: 0 -4px 12px rgba(0,0,0,0.4), 0 8px 16px rgba(0,0,0,0.6);
     transition: transform .3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow .3s, border-color .3s, z-index .3s;
     border: 1px solid rgba(255,255,255,0.05);
-    transform: rotateX(25deg) translateZ(0);
+    transform-origin: center top;
+    transform: rotateX(-25deg) translateZ(0);
     z-index: 1;
   }
   .cw-item:hover { transform: rotateX(0deg) translateY(-40px) scale(1.15); box-shadow: 0 20px 40px rgba(0,0,0,0.9); z-index: 20; }
-  .cw-item.active { border-color: var(--brass-bright); box-shadow: 0 0 0 2px var(--brass-bright), 0 -4px 12px rgba(0,0,0,0.4), 0 8px 16px rgba(0,0,0,0.6); z-index: 5; }
+  .cw-item.active { border-color: var(--brass-bright); box-shadow: 0 0 0 2px var(--brass-bright), 0 -4px 12px rgba(0,0,0,0.4), 0 8px 16px rgba(0,0,0,0.6); }
   .cw-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .cw-info {
     position: absolute; bottom: 0; left: 0; right: 0;
