@@ -651,7 +651,6 @@
   .cw-item {
     position: relative; height: 180px;
     scroll-snap-align: center;
-    transform-style: preserve-3d;
   }
   .cw-card {
     position: absolute; inset: 0; border-radius: 12px; cursor: pointer;
@@ -2027,14 +2026,24 @@
      COVER WALL MODE
      ============================================================ */
   let cwWheelRAF = null;
+  let cwCols = 1;
+  function computeCwCols() {
+    const cs = getComputedStyle(els.cwGrid).gridTemplateColumns;
+    cwCols = cs.split(' ').filter(Boolean).length || 1;
+  }
   function updateCoverWallWheel() {
     const gridRect = els.cwGrid.getBoundingClientRect();
     const centerY = gridRect.top + gridRect.height / 2;
     const maxDist = gridRect.height / 2 + 90;
-    els.cwGrid.querySelectorAll('.cw-item').forEach(item => {
+    const scrollTop = els.cwGrid.scrollTop;
+    const rowH = 90, padTop = 40, itemH = 180;
+    els.cwGrid.querySelectorAll('.cw-item').forEach((item, idx) => {
       const card = item.querySelector('.cw-card');
-      const r = item.getBoundingClientRect();
-      const itemCenterY = r.top + r.height / 2;
+      // analytic position instead of getBoundingClientRect: grid layout is fixed (rowH/padTop),
+      // so we can compute each card's on-screen center without forcing a layout read per item.
+      const row = Math.floor(idx / cwCols);
+      const itemTopInGrid = padTop + row * rowH;
+      const itemCenterY = gridRect.top + (itemTopInGrid - scrollTop) + itemH / 2;
       const ratio = Math.max(-1, Math.min(1, (itemCenterY - centerY) / maxDist));
       const dist = Math.abs(ratio);
       const angle = ratio * -34;          // wheel-picker curvature (convex), flat at center
@@ -2050,7 +2059,7 @@
     cwWheelRAF = requestAnimationFrame(() => { cwWheelRAF = null; updateCoverWallWheel(); });
   }
   els.cwGrid.addEventListener('scroll', requestCoverWallWheelUpdate, { passive: true });
-  window.addEventListener('resize', () => { if (els.coverWallOverlay.classList.contains('open')) requestCoverWallWheelUpdate(); });
+  window.addEventListener('resize', () => { if (els.coverWallOverlay.classList.contains('open')) { computeCwCols(); requestCoverWallWheelUpdate(); } });
 
   function setCoverWallOpen(open) {
     els.coverWallOverlay.classList.toggle('open', open);
@@ -2059,20 +2068,23 @@
 
   els.coverWallOpenBtn.addEventListener('click', () => {
     if (!crateItems.length) { showToast('播放清單目前是空的'); return; }
-    els.cwGrid.innerHTML = '';
-    const frag = document.createDocumentFragment();
-    crateItems.forEach((c, idx) => {
-      const d = document.createElement('div'); d.className = 'cw-item' + (idx === crateIndex ? ' active' : '');
-      d.style.animationDelay = (idx * 0.03) + 's';
-      d.innerHTML = `<div class="cw-card"><img class="cw-img" src="https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg" loading="lazy"><div class="cw-info">${c.nameEl.textContent}</div></div>`;
-      d.addEventListener('click', () => { if(isReady) player.playVideoAt(c.ytIndex); setCoverWallOpen(false); });
-      frag.appendChild(d);
-    });
-    els.cwGrid.appendChild(frag);
     setCoverWallOpen(true);
-    const activeItem = els.cwGrid.querySelector('.cw-item.active');
-    if (activeItem) activeItem.scrollIntoView({ block: 'center' });
-    updateCoverWallWheel();
+    requestAnimationFrame(() => {
+      els.cwGrid.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      crateItems.forEach((c, idx) => {
+        const d = document.createElement('div'); d.className = 'cw-item' + (idx === crateIndex ? ' active' : '');
+        d.style.animationDelay = (idx * 0.03) + 's';
+        d.innerHTML = `<div class="cw-card"><img class="cw-img" src="https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg" loading="lazy"><div class="cw-info">${c.nameEl.textContent}</div></div>`;
+        d.addEventListener('click', () => { if(isReady) player.playVideoAt(c.ytIndex); setCoverWallOpen(false); });
+        frag.appendChild(d);
+      });
+      els.cwGrid.appendChild(frag);
+      computeCwCols();
+      const activeItem = els.cwGrid.querySelector('.cw-item.active');
+      if (activeItem) activeItem.scrollIntoView({ block: 'center' });
+      updateCoverWallWheel();
+    });
   });
   els.cwCloseBtn.addEventListener('click', () => setCoverWallOpen(false));
   els.coverWallOverlay.addEventListener('click', ev => { if(ev.target === els.coverWallOverlay) setCoverWallOpen(false); });
