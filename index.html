@@ -1072,7 +1072,7 @@
   }
   .floating-lyrics-container {
     position: fixed; top: 80px; bottom: 140px; left: 20px; right: 20px;
-    display: flex; flex-direction: column; overflow-y: hidden;
+    display: flex; flex-direction: column; overflow-y: hidden; overflow-x: hidden;
     mask-image: linear-gradient(to bottom, transparent, #000 15%, #000 85%, transparent);
     -webkit-mask-image: linear-gradient(to bottom, transparent, #000 15%, #000 85%, transparent);
     z-index: 40; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
@@ -1081,7 +1081,7 @@
   .floating-lyrics-line {
     padding: 8px 0; font-size: calc(16px + var(--lyrics-size-offset, 0px));
     line-height: 1.6; color: var(--cream-muted); text-align: center;
-    transition: color 0.3s, font-size 0.3s, transform 0.3s; white-space: pre-wrap; flex-shrink: 0;
+    transition: color 0.3s, font-size 0.3s, transform 0.3s; white-space: pre-wrap; flex-shrink: 0; width: 100%;
   }
   .floating-lyrics-line.active { color: var(--brass-bright); font-size: calc(20px + var(--lyrics-size-offset, 0px)); font-weight: 700; transform: scale(1.05); }
   .floating-lyrics-line.near { color: var(--cream-dim); }
@@ -1144,7 +1144,7 @@
   }
   .mini-lyrics-body::-webkit-scrollbar { display: none; }
   .mini-lyrics-line {
-    font-size: 20px; font-weight: 700; line-height: 1.5; color: var(--cream-muted);
+    font-size: calc(20px + var(--lyrics-size-offset, 0px)); font-weight: 700; line-height: 1.5; color: var(--cream-muted);
     padding: 9px 0; filter: blur(2px); opacity: 0.32;
     transform: scale(0.94); transform-origin: left center;
     transition: color .45s ease, opacity .45s ease, filter .45s ease, transform .45s cubic-bezier(0.22,1,0.36,1);
@@ -2042,12 +2042,15 @@
   els.coverWallOpenBtn.addEventListener('click', () => {
     if (!crateItems.length) { showToast('播放清單目前是空的'); return; }
     els.cwGrid.innerHTML = '';
+    const frag = document.createDocumentFragment();
     crateItems.forEach((c, idx) => {
       const d = document.createElement('div'); d.className = 'cw-item' + (idx === crateIndex ? ' active' : '');
-      d.innerHTML = `<div class="cw-card"><img class="cw-img" src="https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"><div class="cw-info">${c.nameEl.textContent}</div></div>`;
+      d.style.animationDelay = (idx * 0.03) + 's';
+      d.innerHTML = `<div class="cw-card"><img class="cw-img" src="https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg" loading="lazy"><div class="cw-info">${c.nameEl.textContent}</div></div>`;
       d.addEventListener('click', () => { if(isReady) player.playVideoAt(c.ytIndex); setCoverWallOpen(false); });
-      els.cwGrid.appendChild(d);
+      frag.appendChild(d);
     });
+    els.cwGrid.appendChild(frag);
     setCoverWallOpen(true);
     const activeItem = els.cwGrid.querySelector('.cw-item.active');
     if (activeItem) activeItem.scrollIntoView({ block: 'center' });
@@ -2375,14 +2378,7 @@
     }, { passive: true });
   })();
 
-  /* Cover wall staggered animation */
-  new MutationObserver(() => {
-    if (els.coverWallOverlay.classList.contains('open')) {
-      els.cwGrid.querySelectorAll('.cw-item').forEach((item, i) => {
-        item.style.animationDelay = (i * 0.03) + 's';
-      });
-    }
-  }).observe(els.coverWallOverlay, { attributes: true, attributeFilter: ['class'] });
+
 
   loadYouTubeAPI();
 </script>
