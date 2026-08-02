@@ -188,17 +188,26 @@
   }
   .saved-remove:hover { color: var(--cream); background: rgba(0,0,0,0.25); }
 
-  /* ===== overall layout: crate + console + lyrics ===== */
+  /* ===== overall layout: crate + console ===== */
   .rig {
     display: flex;
     align-items: stretch;
     justify-content: center;
     gap: 14px;
   }
-  /* the console (and the main disc inside it) stays visually centred
-     because the crate on the left and the lyrics panel on the right are
-     the same width - they balance each other automatically, no
-     invisible spacer needed. */
+  /* an invisible spacer the same width as the crate, placed after the
+     console. Without this, the console (and the main disc inside it)
+     would sit off-centre on screen - shifted right by roughly half the
+     crate's width, since the crate only exists on the left. Balancing
+     it with an equal-width empty spacer on the right means the console
+     always lands exactly in the middle of the screen, regardless of the
+     playlist panel. Hidden on narrow screens where the layout stacks
+     vertically instead (see the max-width:620px rule below), since
+     there's nothing to balance there. */
+  .rig-spacer {
+    width: 240px;
+    flex-shrink: 0;
+  }
 
   /* ===== record crate (left playlist rail) ===== */
   .crate {
@@ -342,182 +351,6 @@
     font-weight: 700;
   }
 
-  /* ===== lyrics panel (right rail, mirrors the crate on the left) ===== */
-  .lyrics-panel {
-    position: relative;
-    width: 240px;
-    height: 420px;
-    max-height: min(70vh, 460px);
-    background: linear-gradient(180deg, #402d1f 0%, var(--walnut-dark) 100%);
-    border-radius: 14px;
-    border: 1px solid #1a120b;
-    box-shadow:
-      0 20px 40px var(--shadow),
-      inset 0 1px 0 rgba(255,255,255,0.06),
-      inset 0 -4px 10px rgba(0,0,0,0.4);
-    overflow: hidden;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .lyrics-header {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    color: var(--cream-dimmer);
-    text-transform: uppercase;
-  }
-  .lyrics-edit-btn {
-    background: none;
-    border: none;
-    color: var(--cream-dimmer);
-    cursor: pointer;
-    padding: 3px;
-    line-height: 0;
-    border-radius: 4px;
-    transition: color 0.15s, background 0.15s;
-  }
-  .lyrics-edit-btn:hover { color: var(--brass-bright); background: rgba(255,255,255,0.06); }
-
-  .lyrics-viewport {
-    position: relative;
-    flex: 1;
-    overflow: hidden;
-    /* fade the top/bottom edges so lines don't hard-cut, echoing the
-       Apple Music lyrics view's soft mask */
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
-    mask-image: linear-gradient(180deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
-  }
-  .lyrics-list {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    /* the whole list translates as one block so the active line settles
-       at the vertical center - see updateLyricsScroll(). This "roll"
-       motion (rather than a scrollbar) is the core of the Apple Music
-       lyrics feel. */
-    transition: transform 0.5s cubic-bezier(.4, 0, .2, 1);
-  }
-  .lyric-line {
-    padding: 9px 18px;
-    text-align: left;
-    font-size: 14px;
-    line-height: 1.4;
-    font-weight: 600;
-    color: var(--cream-dimmer);
-    opacity: 0.32;
-    filter: blur(1.1px);
-    transform: scale(0.96);
-    transform-origin: left center;
-    transition: opacity 0.4s ease, filter 0.4s ease, transform 0.4s ease, font-size 0.4s ease, color 0.4s ease;
-  }
-  .lyric-line.near {
-    color: var(--cream-dim);
-    opacity: 0.6;
-    filter: blur(0.4px);
-    transform: scale(0.98);
-  }
-  .lyric-line.active {
-    font-size: 19px;
-    opacity: 1;
-    filter: blur(0);
-    transform: scale(1.04);
-  }
-  /* karaoke-style fill: a gradient text-clip whose split point (--fill)
-     is advanced each tick based on how far playback has moved through
-     the line's time window - see updateLyricsProgress(). Left of the
-     split reads bright/brass (sung), right of it stays dim (unsung). */
-  .lyric-line .lyric-text {
-    display: inline-block;
-  }
-  .lyric-line.active .lyric-text {
-    background: linear-gradient(90deg, var(--brass-bright) var(--fill, 0%), var(--cream-dim) var(--fill, 0%));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .lyrics-empty {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    text-align: center;
-    padding: 20px;
-  }
-  .lyrics-empty p {
-    margin: 0;
-    font-size: 12px;
-    color: var(--cream-dimmer);
-    line-height: 1.5;
-  }
-  .lyrics-empty button {
-    background: var(--brass);
-    color: #1c140e;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .lyrics-empty button:hover { background: var(--brass-bright); }
-
-  /* ===== lyrics edit overlay (reuses the settings modal's look) ===== */
-  .lyrics-textarea {
-    width: 100%;
-    min-height: 220px;
-    background: #1c140e;
-    border: 1px solid var(--walnut-light);
-    color: var(--cream-dim);
-    padding: 10px;
-    border-radius: 6px;
-    font-family: 'SF Mono', Menlo, monospace;
-    font-size: 12px;
-    line-height: 1.6;
-    resize: vertical;
-  }
-  .lyrics-textarea:focus { outline: 1px solid var(--brass); color: var(--cream); }
-  .lyrics-hint {
-    font-size: 10.5px;
-    color: var(--cream-dimmer);
-    line-height: 1.6;
-    margin: 8px 0 14px;
-  }
-  .lyrics-hint code {
-    color: var(--brass-bright);
-    font-family: 'SF Mono', Menlo, monospace;
-  }
-  .lyrics-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 14px;
-  }
-  .lyrics-actions button {
-    border: none;
-    border-radius: 6px;
-    padding: 9px 18px;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  #lyricsSaveBtn { background: var(--brass); color: #1c140e; }
-  #lyricsSaveBtn:hover { background: var(--brass-bright); }
-  #lyricsCancelBtn { background: rgba(255,255,255,0.06); color: var(--cream-dim); }
-  #lyricsCancelBtn:hover { background: rgba(255,255,255,0.12); }
 
   /* ===== turntable console ===== */
   .console {
@@ -855,14 +688,12 @@
   }
 
   @media (max-width: 620px) {
-    /* stacked layout: player on top, lyrics under it, upcoming-queue
-       crate at the bottom - explicit `order` instead of the previous
-       column-reverse trick, since there are now three real panels
-       (not two panels plus an invisible balance spacer). */
-    .rig { flex-direction: column; align-items: center; }
-    .console { order: 1; }
-    .lyrics-panel { order: 2; width: min(92vw, 400px); height: 240px; }
-    .crate { order: 3; width: min(92vw, 400px); height: 220px; }
+    .rig { flex-direction: column-reverse; align-items: center; }
+    .crate {
+      width: min(92vw, 400px);
+      height: 220px;
+    }
+    .rig-spacer { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -893,26 +724,6 @@
 
     <div class="saved-label" id="savedLabel" style="display:none;">已儲存的清單(點選套用)</div>
     <div class="saved-list" id="savedList"></div>
-  </div>
-</div>
-
-<div class="settings-overlay" id="lyricsOverlay">
-  <div class="settings-panel">
-    <div class="settings-title">
-      <span>♪ 編輯歌詞</span>
-      <button class="settings-close" id="lyricsClose">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.41 1.41 6.3 6.3-6.3 6.3 1.41 1.41 6.3-6.3 6.3 6.3 1.41-1.41-6.3-6.3 6.3-6.3z"/></svg>
-      </button>
-    </div>
-    <div class="settings-label" id="lyricsTrackLabel">目前曲目</div>
-    <textarea class="lyrics-textarea" id="lyricsTextarea" placeholder="[00:12.50] 第一句歌詞&#10;[00:16.30] 第二句歌詞"></textarea>
-    <div class="lyrics-hint">
-      每行一句,格式為 <code>[分:秒.毫秒] 歌詞內容</code>,例如 <code>[00:12.50] 第一句歌詞</code>。歌詞會依照這首歌的 YouTube 影片 ID 儲存在這個瀏覽器裡。
-    </div>
-    <div class="lyrics-actions">
-      <button id="lyricsCancelBtn">取消</button>
-      <button id="lyricsSaveBtn">儲存</button>
-    </div>
   </div>
 </div>
 
@@ -988,21 +799,7 @@
       <div class="status-line" id="statusLine">準備就緒</div>
     </div>
 
-    <div class="lyrics-panel" id="lyricsPanel">
-      <div class="lyrics-header">
-        <span>歌詞</span>
-        <button class="lyrics-edit-btn" id="lyricsEditBtn" title="編輯歌詞">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zm17.71-10.04a1 1 0 0 0 0-1.41l-2.51-2.51a1 1 0 0 0-1.41 0l-1.96 1.96 3.75 3.75z"/></svg>
-        </button>
-      </div>
-      <div class="lyrics-viewport" id="lyricsViewport">
-        <div class="lyrics-list" id="lyricsList"></div>
-        <div class="lyrics-empty" id="lyricsEmpty">
-          <p>這首歌還沒有歌詞<br>點擊新增,貼上帶時間碼的歌詞</p>
-          <button id="lyricsAddBtn">新增歌詞</button>
-        </div>
-      </div>
-    </div>
+    <div class="rig-spacer" aria-hidden="true"></div>
 
   </div>
 
@@ -1023,12 +820,6 @@
   let userScrollTimer = null;
   let programmaticScroll = false;
   let accordionRaf = null;
-
-  // lyrics state
-  let currentVideoId = '';
-  let lyricsLines = [];      // [{time: seconds, text: string}, ...] sorted ascending
-  let activeLyricIdx = -1;
-  let lyricsTimer = null;
 
   const els = {
     disc: document.getElementById('disc'),
@@ -1061,18 +852,6 @@
     volIcon: document.getElementById('volIcon'),
     muteIcon: document.getElementById('muteIcon'),
     volumeSlider: document.getElementById('volumeSlider'),
-    lyricsPanel: document.getElementById('lyricsPanel'),
-    lyricsViewport: document.getElementById('lyricsViewport'),
-    lyricsList: document.getElementById('lyricsList'),
-    lyricsEmpty: document.getElementById('lyricsEmpty'),
-    lyricsAddBtn: document.getElementById('lyricsAddBtn'),
-    lyricsEditBtn: document.getElementById('lyricsEditBtn'),
-    lyricsOverlay: document.getElementById('lyricsOverlay'),
-    lyricsClose: document.getElementById('lyricsClose'),
-    lyricsTextarea: document.getElementById('lyricsTextarea'),
-    lyricsTrackLabel: document.getElementById('lyricsTrackLabel'),
-    lyricsSaveBtn: document.getElementById('lyricsSaveBtn'),
-    lyricsCancelBtn: document.getElementById('lyricsCancelBtn'),
   };
 
   let shuffleOn = false;
@@ -1140,7 +919,6 @@
       els.pauseIcon.style.display = '';
       updateTrackMeta();
       startProgressLoop();
-      startLyricsLoop();
       setStatus('播放中');
       if (crateItems.length === 0) buildCrateFromPlayer();
       syncCrateToPlayer();
@@ -1150,7 +928,6 @@
       els.playIcon.style.display = '';
       els.pauseIcon.style.display = 'none';
       stopProgressLoop();
-      stopLyricsLoop();
       setStatus('已暫停');
     } else if (e.data === YT.PlayerState.ENDED) {
       setStatus('這首結束,換下一首');
@@ -1171,10 +948,6 @@
       els.trackArtist.textContent = data.author || '';
       if (data.video_id) {
         els.albumImg.src = `https://img.youtube.com/vi/${data.video_id}/hqdefault.jpg`;
-        if (data.video_id !== currentVideoId) {
-          currentVideoId = data.video_id;
-          renderLyricsForVideo(currentVideoId);
-        }
       }
       refineSavedPlaylistName(data.author);
     } catch (err) {}
@@ -1197,156 +970,6 @@
     if (progressTimer) clearInterval(progressTimer);
     progressTimer = null;
   }
-
-  // ===== lyrics (Apple Music-style synced view) =====
-  const LYRICS_KEY_PREFIX = 'ytMusicPlayer.lyrics.';
-
-  function loadLyricsRaw(videoId) {
-    if (!videoId) return '';
-    try { return localStorage.getItem(LYRICS_KEY_PREFIX + videoId) || ''; } catch (err) { return ''; }
-  }
-  function saveLyricsRaw(videoId, text) {
-    if (!videoId) return;
-    try {
-      if (text && text.trim()) localStorage.setItem(LYRICS_KEY_PREFIX + videoId, text);
-      else localStorage.removeItem(LYRICS_KEY_PREFIX + videoId);
-    } catch (err) {}
-  }
-
-  // Parses simple LRC-style lines: "[mm:ss.xx] lyric text". A line may
-  // carry more than one timestamp tag (common when the same line repeats
-  // in a chorus); each tag becomes its own timed entry. Lines without a
-  // recognisable timestamp, or with no text after it, are skipped.
-  function parseLRC(raw) {
-    const out = [];
-    (raw || '').split(/\r?\n/).forEach(function (line) {
-      const tagRe = /\[(\d{1,2}):(\d{1,2}(?:\.\d{1,3})?)\]/g;
-      const times = [];
-      let m;
-      while ((m = tagRe.exec(line)) !== null) {
-        times.push(parseInt(m[1], 10) * 60 + parseFloat(m[2]));
-      }
-      if (!times.length) return;
-      const text = line.replace(tagRe, '').trim();
-      if (!text) return;
-      times.forEach(function (t) { out.push({ time: t, text: text }); });
-    });
-    out.sort(function (a, b) { return a.time - b.time; });
-    return out;
-  }
-
-  function renderLyricsForVideo(videoId) {
-    const raw = loadLyricsRaw(videoId);
-    lyricsLines = parseLRC(raw);
-    activeLyricIdx = -1;
-
-    els.lyricsList.innerHTML = '';
-    lyricsLines.forEach(function () {
-      const row = document.createElement('div');
-      row.className = 'lyric-line';
-      const span = document.createElement('span');
-      span.className = 'lyric-text';
-      els.lyricsList.appendChild(row).appendChild(span);
-    });
-    lyricsLines.forEach(function (entry, i) {
-      els.lyricsList.children[i].querySelector('.lyric-text').textContent = entry.text;
-    });
-
-    const hasLyrics = lyricsLines.length > 0;
-    els.lyricsEmpty.style.display = hasLyrics ? 'none' : '';
-    els.lyricsList.style.display = hasLyrics ? '' : 'none';
-
-    if (hasLyrics) {
-      // land on whichever line matches current playback position (e.g.
-      // when switching tracks mid-scrub, or re-rendering after a save)
-      const cur = isReady ? (player.getCurrentTime() || 0) : 0;
-      updateLyricsProgress(cur);
-    }
-  }
-
-  // Slides .lyrics-list so the given line index sits vertically centered
-  // in the viewport - this "roll" (rather than a scrollbar) is the core
-  // of the Apple Music lyrics feel.
-  function updateLyricsScroll(idx) {
-    if (idx < 0 || !els.lyricsList.children[idx]) return;
-    const lineEl = els.lyricsList.children[idx];
-    const viewportH = els.lyricsViewport.clientHeight;
-    const targetY = viewportH / 2 - (lineEl.offsetTop + lineEl.offsetHeight / 2);
-    els.lyricsList.style.transform = 'translateY(' + targetY + 'px)';
-  }
-
-  function updateLyricsProgress(currentTime) {
-    if (!lyricsLines.length) return;
-
-    let idx = -1;
-    for (let i = 0; i < lyricsLines.length; i++) {
-      if (lyricsLines[i].time <= currentTime) idx = i; else break;
-    }
-
-    if (idx !== activeLyricIdx) {
-      const children = els.lyricsList.children;
-      if (children[activeLyricIdx]) children[activeLyricIdx].classList.remove('active');
-      if (children[activeLyricIdx - 1]) children[activeLyricIdx - 1].classList.remove('near');
-      if (children[activeLyricIdx + 1]) children[activeLyricIdx + 1].classList.remove('near');
-
-      activeLyricIdx = idx;
-
-      if (children[activeLyricIdx]) children[activeLyricIdx].classList.add('active');
-      if (children[activeLyricIdx - 1]) children[activeLyricIdx - 1].classList.add('near');
-      if (children[activeLyricIdx + 1]) children[activeLyricIdx + 1].classList.add('near');
-
-      updateLyricsScroll(activeLyricIdx);
-    }
-
-    // karaoke fill: sweep the active line's gradient split from 0% to
-    // 100% across the window between it and the next line (falling back
-    // to a flat 3s window for the final line, which has no "next").
-    if (activeLyricIdx >= 0 && els.lyricsList.children[activeLyricIdx]) {
-      const cur = lyricsLines[activeLyricIdx];
-      const next = lyricsLines[activeLyricIdx + 1];
-      const span = next ? Math.max(0.4, next.time - cur.time) : 3;
-      const frac = Math.max(0, Math.min(1, (currentTime - cur.time) / span));
-      const textEl = els.lyricsList.children[activeLyricIdx].querySelector('.lyric-text');
-      if (textEl) textEl.style.setProperty('--fill', (frac * 100).toFixed(1) + '%');
-    }
-  }
-
-  function startLyricsLoop() {
-    stopLyricsLoop();
-    if (!lyricsLines.length) return;
-    // a tighter tick than the progress bar's 400ms so the karaoke fill
-    // sweeps smoothly rather than stepping visibly
-    lyricsTimer = setInterval(function () {
-      if (!isReady) return;
-      updateLyricsProgress(player.getCurrentTime() || 0);
-    }, 100);
-  }
-  function stopLyricsLoop() {
-    if (lyricsTimer) clearInterval(lyricsTimer);
-    lyricsTimer = null;
-  }
-
-  // ----- lyrics edit overlay -----
-  function openLyricsOverlay() {
-    els.lyricsTrackLabel.textContent = els.trackTitle.textContent || '目前曲目';
-    els.lyricsTextarea.value = loadLyricsRaw(currentVideoId);
-    els.lyricsOverlay.classList.add('open');
-  }
-  function closeLyricsOverlay() { els.lyricsOverlay.classList.remove('open'); }
-
-  els.lyricsEditBtn.addEventListener('click', openLyricsOverlay);
-  els.lyricsAddBtn.addEventListener('click', openLyricsOverlay);
-  els.lyricsClose.addEventListener('click', closeLyricsOverlay);
-  els.lyricsCancelBtn.addEventListener('click', closeLyricsOverlay);
-  els.lyricsOverlay.addEventListener('click', (ev) => {
-    if (ev.target === els.lyricsOverlay) closeLyricsOverlay();
-  });
-  els.lyricsSaveBtn.addEventListener('click', () => {
-    saveLyricsRaw(currentVideoId, els.lyricsTextarea.value);
-    renderLyricsForVideo(currentVideoId);
-    if (isReady && player.getPlayerState() === YT.PlayerState.PLAYING) startLyricsLoop();
-    closeLyricsOverlay();
-  });
 
   els.playBtn.addEventListener('click', () => {
     if (!isReady) return;
@@ -1738,7 +1361,6 @@
   window.addEventListener('resize', function () {
     updateCratePadding();
     requestAccordionUpdate();
-    if (activeLyricIdx >= 0) updateLyricsScroll(activeLyricIdx);
   });
 
   loadYouTubeAPI();
