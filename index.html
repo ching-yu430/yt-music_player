@@ -643,26 +643,35 @@
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     grid-auto-rows: 90px;
     align-content: start;
-    perspective: 1200px;
+    perspective: 1600px;
+    perspective-origin: 50% 20%;
     scroll-snap-type: y proximity;
     scrollbar-width: thin; scrollbar-color: var(--brass) transparent;
   }
   .cw-item {
     position: relative; height: 180px;
     scroll-snap-align: center;
+    transform-style: preserve-3d;
   }
   .cw-card {
     position: absolute; inset: 0; border-radius: 12px; cursor: pointer;
     overflow: hidden; background: #111;
-    box-shadow: 0 -4px 12px rgba(0,0,0,0.4), 0 8px 16px rgba(0,0,0,0.6);
-    transition: transform .12s ease-out, opacity .12s ease-out, box-shadow .3s, border-color .3s, z-index .3s;
+    box-shadow: 0 14px 24px -8px rgba(0,0,0,0.65), 0 4px 8px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.06);
+    transition: transform .16s ease-out, filter .16s ease-out, box-shadow .3s, border-color .3s, z-index .3s;
     border: 1px solid rgba(255,255,255,0.05);
     transform-origin: 50% 50%;
-    transform: rotateX(25deg) translateZ(0);
+    transform: rotateX(25deg) rotateZ(var(--cw-tilt, 0deg)) translateZ(0);
+    filter: brightness(1) saturate(1);
     z-index: 1;
   }
-  .cw-item:hover .cw-card { transform: rotateX(0deg) translateY(-40px) scale(1.15) !important; box-shadow: 0 20px 40px rgba(0,0,0,0.9); z-index: 20; }
-  .cw-item.active .cw-card { border-color: var(--brass-bright); box-shadow: 0 0 0 2px var(--brass-bright), 0 -4px 12px rgba(0,0,0,0.4), 0 8px 16px rgba(0,0,0,0.6); }
+  /* depth-cueing shade: darkens as a card recedes, instead of fading it out */
+  .cw-card::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: rgba(0,0,0, var(--cw-shade, 0));
+    transition: background .16s ease-out;
+  }
+  .cw-item:hover .cw-card { transform: rotateX(0deg) rotateZ(0deg) translateY(-40px) translateZ(60px) scale(1.15) !important; filter: brightness(1) saturate(1) !important; box-shadow: 0 24px 48px rgba(0,0,0,0.85); z-index: 20; }
+  .cw-item.active .cw-card { border-color: var(--brass-bright); box-shadow: 0 0 0 2px var(--brass-bright), 0 14px 24px -8px rgba(0,0,0,0.65), 0 4px 8px rgba(0,0,0,0.5); }
   .cw-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .cw-info {
     position: absolute; bottom: 0; left: 0; right: 0;
@@ -2026,14 +2035,20 @@
     const maxDist = gridRect.height / 2 + 90;
     els.cwGrid.querySelectorAll('.cw-item').forEach(item => {
       const card = item.querySelector('.cw-card');
+      const tilt = item.style.getPropertyValue('--cw-tilt') || '0deg';
       const r = item.getBoundingClientRect();
       const itemCenterY = r.top + r.height / 2;
       const ratio = Math.max(-1, Math.min(1, (itemCenterY - centerY) / maxDist));
+      const dist = Math.abs(ratio);
       const angle = ratio * -34;          // wheel-picker curvature (convex), flat at center
-      const scale = 1 - Math.abs(ratio) * 0.28;
-      const opacity = 1 - Math.abs(ratio) * 0.6;
-      card.style.transform = 'rotateX(' + angle.toFixed(2) + 'deg) translateZ(0) scale(' + scale.toFixed(3) + ')';
-      card.style.opacity = opacity.toFixed(2);
+      const scale = 1 - dist * 0.28;
+      const zTranslate = -dist * 160;      // actually push receding cards back in 3D space
+      const brightness = (1 - dist * 0.5).toFixed(2);
+      const saturate = (1 - dist * 0.3).toFixed(2);
+      card.style.transform = 'rotateX(' + angle.toFixed(2) + 'deg) rotateZ(' + tilt + ') translateZ(' + zTranslate.toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
+      card.style.filter = 'brightness(' + brightness + ') saturate(' + saturate + ')';
+      card.style.setProperty('--cw-shade', (dist * 0.35).toFixed(2));
+      card.style.zIndex = Math.round((1 - dist) * 100);
     });
   }
   function requestCoverWallWheelUpdate() {
@@ -2055,6 +2070,7 @@
     crateItems.forEach((c, idx) => {
       const d = document.createElement('div'); d.className = 'cw-item' + (idx === crateIndex ? ' active' : '');
       d.style.animationDelay = (idx * 0.03) + 's';
+      d.style.setProperty('--cw-tilt', (((idx * 53) % 7) - 3) + 'deg'); // -3..3deg pseudo-random fan tilt
       d.innerHTML = `<div class="cw-card"><img class="cw-img" src="https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg" loading="lazy"><div class="cw-info">${c.nameEl.textContent}</div></div>`;
       d.addEventListener('click', () => { if(isReady) player.playVideoAt(c.ytIndex); setCoverWallOpen(false); });
       frag.appendChild(d);
