@@ -61,8 +61,8 @@
     --brass-bright: #8C6A35;
     --shadow: rgba(80, 60, 40, 0.35);
   }
-  [data-theme="cream"] body { background: radial-gradient(ellipse at 50% 20%, #F5F0E6 0%, #E8DFD1 50%, #D4C9B8 100%); }
-  [data-theme="cream"] .fs-overlay:fullscreen { background: linear-gradient(rgba(232,223,209,0.7), rgba(232,223,209,0.8)), radial-gradient(ellipse at 50% 20%, #F5F0E6 0%, #E8DFD1 50%, #D4C9B8 100%); }
+  [data-theme="cream"] body { background: radial-gradient(circle at 50% 20%, #F5F0E6 0%, #E8DFD1 50%, #D4C9B8 100%); }
+  [data-theme="cream"] .fs-overlay:fullscreen { background: linear-gradient(rgba(232,223,209,0.7), rgba(232,223,209,0.8)), radial-gradient(circle at 50% 20%, #F5F0E6 0%, #E8DFD1 50%, #D4C9B8 100%); }
   
   /* Theme: Midnight */
   [data-theme="midnight"] {
@@ -80,8 +80,8 @@
     --terracotta: #1E3A8A;
     --shadow: rgba(0,0,0,0.7);
   }
-  [data-theme="midnight"] body { background: radial-gradient(ellipse at 50% 20%, #1E293B 0%, #0F172A 50%, #020617 100%); }
-  [data-theme="midnight"] .fs-overlay:fullscreen { background: linear-gradient(rgba(16,22,43,0.7), rgba(16,22,43,0.8)), radial-gradient(ellipse at 50% 20%, #1E293B 0%, #0F172A 50%, #020617 100%); }
+  [data-theme="midnight"] body { background: radial-gradient(circle at 50% 20%, #1E293B 0%, #0F172A 50%, #020617 100%); }
+  [data-theme="midnight"] .fs-overlay:fullscreen { background: linear-gradient(rgba(16,22,43,0.7), rgba(16,22,43,0.8)), radial-gradient(circle at 50% 20%, #1E293B 0%, #0F172A 50%, #020617 100%); }
 
   /* Theme: Retro Green */
   [data-theme="retro"] {
@@ -102,14 +102,14 @@
     --terracotta: #E2725B;
     --shadow: rgba(10, 31, 21, 0.5);
   }
-  [data-theme="retro"] body { background: radial-gradient(ellipse at 50% 20%, #216345 0%, #133726 55%, #081610 100%); }
-  [data-theme="retro"] .fs-overlay:fullscreen { background: linear-gradient(rgba(8,22,16,0.75), rgba(8,22,16,0.85)), radial-gradient(ellipse at 50% 20%, #216345 0%, #133726 55%, #081610 100%); }
+  [data-theme="retro"] body { background: radial-gradient(circle at 50% 20%, #216345 0%, #133726 55%, #081610 100%); }
+  [data-theme="retro"] .fs-overlay:fullscreen { background: linear-gradient(rgba(8,22,16,0.75), rgba(8,22,16,0.85)), radial-gradient(circle at 50% 20%, #216345 0%, #133726 55%, #081610 100%); }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   html, body {
     min-height: 100vh;
-    background: radial-gradient(ellipse at 50% 20%, #C4A882 0%, #A88B66 50%, #8A7050 100%);
+    background: radial-gradient(circle at 50% 20%, #C4A882 0%, #A88B66 50%, #8A7050 100%);
     font-family: 'Noto Serif TC', Georgia, 'PMingLiU', serif;
     color: var(--cream);
     overflow-x: hidden;
@@ -157,6 +157,7 @@
     transition: transform .15s ease, background .3s ease, border-color .3s ease, color .3s ease;
   }
   .settings-fab:hover { transform: scale(1.08); }
+  body:has(.cover-wall-overlay.open) .settings-fab { display: none; }
 
   /* ============================================================
      SETTINGS MODAL
@@ -1231,15 +1232,22 @@
   /* ============================================================
      THEME & SETTINGS
      ============================================================ */
+  const THEME_COLORS = { coffee: '#231810', cream: '#E8DFD1', midnight: '#0F172A', retro: '#133726' };
+  function applyThemeColor(th) {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && THEME_COLORS[th]) meta.setAttribute('content', THEME_COLORS[th]);
+  }
   function loadTheme() {
     const th = localStorage.getItem('ytPlayerTheme') || 'coffee';
     document.documentElement.setAttribute('data-theme', th);
+    applyThemeColor(th);
     els.themeBtns.forEach(b => b.classList.toggle('active', b.dataset.val === th));
   }
   els.themeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const th = btn.dataset.val;
       document.documentElement.setAttribute('data-theme', th);
+      applyThemeColor(th);
       localStorage.setItem('ytPlayerTheme', th);
       els.themeBtns.forEach(b => b.classList.toggle('active', b.dataset.val === th));
     });
@@ -1573,22 +1581,27 @@
   els.cwGrid.addEventListener('scroll', requestCoverWallWheelUpdate, { passive: true });
   window.addEventListener('resize', () => { if (els.coverWallOverlay.classList.contains('open')) requestCoverWallWheelUpdate(); });
 
+  function setCoverWallOpen(open) {
+    els.coverWallOverlay.classList.toggle('open', open);
+    els.settingsFab.style.display = open ? 'none' : '';
+  }
+
   els.coverWallOpenBtn.addEventListener('click', () => {
     if (!crateItems.length) { showToast('播放清單目前是空的'); return; }
     els.cwGrid.innerHTML = '';
     crateItems.forEach((c, idx) => {
       const d = document.createElement('div'); d.className = 'cw-item' + (idx === crateIndex ? ' active' : '');
       d.innerHTML = `<div class="cw-card"><img class="cw-img" src="https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"><div class="cw-info">${c.nameEl.textContent}</div></div>`;
-      d.addEventListener('click', () => { if(isReady) player.playVideoAt(c.ytIndex); els.coverWallOverlay.classList.remove('open'); });
+      d.addEventListener('click', () => { if(isReady) player.playVideoAt(c.ytIndex); setCoverWallOpen(false); });
       els.cwGrid.appendChild(d);
     });
-    els.coverWallOverlay.classList.add('open');
+    setCoverWallOpen(true);
     const activeItem = els.cwGrid.querySelector('.cw-item.active');
     if (activeItem) activeItem.scrollIntoView({ block: 'center' });
     updateCoverWallWheel();
   });
-  els.cwCloseBtn.addEventListener('click', () => els.coverWallOverlay.classList.remove('open'));
-  els.coverWallOverlay.addEventListener('click', ev => { if(ev.target === els.coverWallOverlay) els.coverWallOverlay.classList.remove('open'); });
+  els.cwCloseBtn.addEventListener('click', () => setCoverWallOpen(false));
+  els.coverWallOverlay.addEventListener('click', ev => { if(ev.target === els.coverWallOverlay) setCoverWallOpen(false); });
 
   /* ============================================================
      AUDIO SPECTRUM (SIMULATED)
@@ -1728,7 +1741,7 @@
       case 'g': els.coverWallOpenBtn.click(); break;
       case 'escape':
         if(fsOpen)toggleFullscreen();
-        else if(els.coverWallOverlay.classList.contains('open')) els.coverWallOverlay.classList.remove('open');
+        else if(els.coverWallOverlay.classList.contains('open')) setCoverWallOpen(false);
         else if(lyricsOpen)toggleLyrics();
         else if(els.settingsOverlay.classList.contains('open'))closeSettings();
         else if(els.kbdOverlay.classList.contains('open'))els.kbdOverlay.classList.remove('open');
