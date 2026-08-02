@@ -1070,6 +1070,14 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     margin-top: 2px;
   }
+  .mini-player-lyric {
+    font-size: 13px; color: var(--brass-bright); font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    display: none; transition: opacity 0.2s;
+  }
+  .mini-player-info.has-lyric .mini-player-title,
+  .mini-player-info.has-lyric .mini-player-artist { display: none; }
+  .mini-player-info.has-lyric .mini-player-lyric { display: block; }
   .mini-player-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .mini-ctrl {
     background: none; border: none; color: var(--cream); cursor: pointer;
@@ -1438,6 +1446,7 @@
   <div class="mini-player-info" id="miniPlayerInfo" title="顯示歌詞">
     <div class="mini-player-title" id="miniPlayerTitle">—</div>
     <div class="mini-player-artist" id="miniPlayerArtist">—</div>
+    <div class="mini-player-lyric" id="miniPlayerLyric"></div>
   </div>
   <div class="mini-player-controls">
     <button class="mini-ctrl" id="miniPrevBtn" title="上一首">
@@ -1484,7 +1493,7 @@
   let player, isReady = false, currentPlaylistId = '', progressTimer = null;
   let crateItems = [], crateIndex = -1;
   let userScrolling = false, userScrollTimer = null, programmaticScroll = false, accordionRaf = null;
-  let shuffleOn = false, loopMode = 'off', lastVolume = 70;
+  let shuffleOn = false, loopMode = 'off', lastVolume = 70, currentYtIndex = -1;
   let mainBarSeeking = false, fsBarSeeking = false;
   let lyricsOpen = false, currentLyricsData = null, lastLyricsVideoId = '';
   let fsOpen = false, fsParticlesCreated = false, specTimer = null;
@@ -1548,6 +1557,7 @@
     miniLyricsArtist: document.getElementById('miniLyricsArtist'),
     miniLyricsBody: document.getElementById('miniLyricsBody'),
     miniLyricsCloseBtn: document.getElementById('miniLyricsCloseBtn'),
+    miniPlayerLyric: document.getElementById('miniPlayerLyric'),
     gestureFeedback: document.getElementById('gestureFeedback')
   };
 
@@ -1674,6 +1684,7 @@
   function onPlayerStateChange(e) {
     const S = YT.PlayerState;
     if (e.data === S.PLAYING) {
+      currentYtIndex = player.getPlaylistIndex();
       els.disc.classList.add('playing'); els.tonearm.classList.add('down');
       els.playIcon.style.display = 'none'; els.pauseIcon.style.display = '';
       document.body.classList.add('is-playing');
@@ -1692,9 +1703,12 @@
     }
   }
   function handleTrackEnd() {
-    if (loopMode === 'one') { player.seekTo(0,true); player.playVideo(); setStatus('單曲循環'); }
-    else if (loopMode === 'all') { goNext(); setStatus('下一首（清單循環）'); }
-    else { setStatus('這首結束'); goNext(); }
+    if (loopMode === 'one') {
+      setTimeout(() => { player.playVideoAt(currentYtIndex); }, 10);
+      setStatus('單曲循環');
+    } else {
+      setStatus('播放下一首...');
+    }
   }
 
   /* ============================================================
@@ -1742,6 +1756,9 @@
         if (lyricsOpen) highlightLyricLine(cur);
         if (fsOpen) highlightFsLyrics(cur);
         if (miniLyricsOpen) highlightMiniLyrics(cur);
+        if (miniPlayerOpen) updateMiniPlayerCenterLyric(cur);
+      } else {
+        if (miniPlayerOpen) els.miniPlayerInfo.classList.remove('has-lyric');
       }
     }, 300);
   }
@@ -1763,7 +1780,11 @@
   els.nextBtn.addEventListener('click', goNext); els.prevBtn.addEventListener('click', goPrev);
   els.fsPlayBtn.addEventListener('click', togglePlay); els.fsPrevBtn.addEventListener('click', goPrev); els.fsNextBtn.addEventListener('click', goNext);
 
-  els.shuffleBtn.addEventListener('click', () => { shuffleOn = !shuffleOn; els.shuffleBtn.classList.toggle('active', shuffleOn); showToast(shuffleOn ? '🔀 隨機播放已開啟' : '🔀 隨機播放已關閉'); });
+  els.shuffleBtn.addEventListener('click', () => { 
+    shuffleOn = !shuffleOn; els.shuffleBtn.classList.toggle('active', shuffleOn); 
+    if (isReady && player.setShuffle) player.setShuffle(shuffleOn);
+    showToast(shuffleOn ? '🔀 隨機播放已開啟' : '🔀 隨機播放已關閉'); 
+  });
   const loopStates = ['off','all','one'], loopLabels = {off:'循環: 關閉', all:'🔁 清單循環', one:'🔂 單曲循環'};
   const loopSvgs = {
     off:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg>',
@@ -1773,7 +1794,9 @@
   els.loopBtn.addEventListener('click', () => {
     loopMode = loopStates[(loopStates.indexOf(loopMode)+1)%3];
     els.loopBtn.innerHTML = loopSvgs[loopMode]; els.loopBtn.title = loopLabels[loopMode];
-    els.loopBtn.classList.toggle('active', loopMode !== 'off'); showToast(loopLabels[loopMode]);
+    els.loopBtn.classList.toggle('active', loopMode !== 'off'); 
+    if (isReady && player.setLoop) player.setLoop(loopMode !== 'off');
+    showToast(loopLabels[loopMode]);
   });
   function updateVolumeUI(vol, muted) {
     els.volumeSlider.value = vol; const pct = Math.max(0, Math.min(100, vol));
@@ -2087,6 +2110,16 @@
     const lineEls = els.miniLyricsBody.querySelectorAll('.mini-lyrics-line');
     lineEls.forEach((el,i) => { el.classList.toggle('active',i===ai); el.classList.toggle('near', Math.abs(i-ai)<=1 && i!==ai); });
     if (ai>=0 && lineEls[ai]) lineEls[ai].scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  function updateMiniPlayerCenterLyric(t) {
+    if (!currentLyricsData||!currentLyricsData.synced) { els.miniPlayerInfo.classList.remove('has-lyric'); return; }
+    let ai=-1; for(let i=currentLyricsData.synced.length-1;i>=0;i--){if(t>=currentLyricsData.synced[i].time){ai=i;break;}}
+    if (ai>=0 && currentLyricsData.synced[ai].text.trim() !== '') {
+      els.miniPlayerLyric.textContent = currentLyricsData.synced[ai].text;
+      els.miniPlayerInfo.classList.add('has-lyric');
+    } else {
+      els.miniPlayerInfo.classList.remove('has-lyric');
+    }
   }
   els.lyricsBtn.addEventListener('click', toggleLyrics); els.lyricsClose.addEventListener('click', toggleLyrics);
   function toggleLyrics() { lyricsOpen=!lyricsOpen; els.lyricsColumn.classList.toggle('open',lyricsOpen); els.lyricsBtn.classList.toggle('active',lyricsOpen); }
