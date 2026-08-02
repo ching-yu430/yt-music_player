@@ -1070,14 +1070,15 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     margin-top: 2px;
   }
-  .mini-player-lyric {
-    font-size: 13px; color: var(--brass-bright); font-weight: 600;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    display: none; transition: opacity 0.2s;
+  .floating-lyric {
+    position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    width: 90%; max-width: 600px; text-align: center;
+    font-size: 22px; font-weight: 700; color: var(--brass-bright);
+    text-shadow: 0 4px 16px rgba(0,0,0,0.8);
+    pointer-events: none; z-index: 40;
+    opacity: 0; transition: opacity 0.4s ease, transform 0.4s ease;
   }
-  .mini-player-info.has-lyric .mini-player-title,
-  .mini-player-info.has-lyric .mini-player-artist { display: none; }
-  .mini-player-info.has-lyric .mini-player-lyric { display: block; }
+  .floating-lyric.show { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
   .mini-player-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .mini-ctrl {
     background: none; border: none; color: var(--cream); cursor: pointer;
@@ -1440,13 +1441,13 @@
 </div>
 
 <!-- ============== MINI PLAYER ============== -->
+<div class="floating-lyric" id="floatingLyric"></div>
 <div class="mini-player" id="miniPlayer">
   <div class="mini-player-progress-top"><div class="mini-player-progress-fill" id="miniProgressFill"></div></div>
   <div class="mini-player-art" id="miniPlayerArt"></div>
   <div class="mini-player-info" id="miniPlayerInfo" title="顯示歌詞">
     <div class="mini-player-title" id="miniPlayerTitle">—</div>
     <div class="mini-player-artist" id="miniPlayerArtist">—</div>
-    <div class="mini-player-lyric" id="miniPlayerLyric"></div>
   </div>
   <div class="mini-player-controls">
     <button class="mini-ctrl" id="miniPrevBtn" title="上一首">
@@ -1557,7 +1558,7 @@
     miniLyricsArtist: document.getElementById('miniLyricsArtist'),
     miniLyricsBody: document.getElementById('miniLyricsBody'),
     miniLyricsCloseBtn: document.getElementById('miniLyricsCloseBtn'),
-    miniPlayerLyric: document.getElementById('miniPlayerLyric'),
+    floatingLyric: document.getElementById('floatingLyric'),
     gestureFeedback: document.getElementById('gestureFeedback')
   };
 
@@ -1706,6 +1707,10 @@
     if (loopMode === 'one') {
       setTimeout(() => { player.playVideoAt(currentYtIndex); }, 10);
       setStatus('單曲循環');
+    } else if (loopMode === 'all') {
+      let currentIds = []; try { currentIds = player.getPlaylist() || []; } catch(e) {}
+      if (currentYtIndex === currentIds.length - 1) setTimeout(() => { player.playVideoAt(0); }, 10);
+      setStatus('清單循環');
     } else {
       setStatus('播放下一首...');
     }
@@ -1756,9 +1761,9 @@
         if (lyricsOpen) highlightLyricLine(cur);
         if (fsOpen) highlightFsLyrics(cur);
         if (miniLyricsOpen) highlightMiniLyrics(cur);
-        if (miniPlayerOpen) updateMiniPlayerCenterLyric(cur);
+        updateFloatingLyric(cur);
       } else {
-        if (miniPlayerOpen) els.miniPlayerInfo.classList.remove('has-lyric');
+        els.floatingLyric.classList.remove('show');
       }
     }, 300);
   }
@@ -1773,10 +1778,8 @@
     if (player.getPlayerState() === YT.PlayerState.PLAYING) player.pauseVideo();
     else player.playVideo();
   }
-  function getVisualIndex() { if (!isReady || !crateItems.length) return -1; try { return crateItems.findIndex(c => c.ytIndex === player.getPlaylistIndex()); } catch(e) { return -1; } }
-  function playCrateByVisualIndex(vi) { if (!isReady || !crateItems.length) return; player.playVideoAt(crateItems[((vi % crateItems.length) + crateItems.length) % crateItems.length].ytIndex); }
-  function goNext() { if (!isReady || !crateItems.length) return; const cur = getVisualIndex(); if (shuffleOn && crateItems.length > 1) { let i; do { i = Math.floor(Math.random()*crateItems.length); } while(i===cur); playCrateByVisualIndex(i); } else playCrateByVisualIndex(cur + 1); }
-  function goPrev() { if (!isReady || !crateItems.length) return; const cur = getVisualIndex(); if (shuffleOn && crateItems.length > 1) { let i; do { i = Math.floor(Math.random()*crateItems.length); } while(i===cur); playCrateByVisualIndex(i); } else playCrateByVisualIndex(cur - 1); }
+  function goNext() { if (!isReady || !crateItems.length) return; player.nextVideo(); }
+  function goPrev() { if (!isReady || !crateItems.length) return; player.previousVideo(); }
   els.nextBtn.addEventListener('click', goNext); els.prevBtn.addEventListener('click', goPrev);
   els.fsPlayBtn.addEventListener('click', togglePlay); els.fsPrevBtn.addEventListener('click', goPrev); els.fsNextBtn.addEventListener('click', goNext);
 
@@ -1890,7 +1893,14 @@
     ids.forEach((videoId, idx) => {
       const item = document.createElement('div'); item.className = 'record-item';
       item.innerHTML = '<div class="mini-disc"><div class="mini-disc-cover" style="background-image:url(https://img.youtube.com/vi/'+videoId+'/mqdefault.jpg)"></div></div><div class="mini-name">第 '+(idx+1)+' 首</div>';
-      item.addEventListener('click', () => { if(isReady) player.playVideoAt(idx); });
+      item.addEventListener('click', () => { 
+        if(isReady) {
+          let currentIds = []; try { currentIds = player.getPlaylist() || []; } catch(e) {}
+          let realYtIndex = currentIds.indexOf(videoId);
+          if (realYtIndex !== -1) player.playVideoAt(realYtIndex);
+          else player.playVideoAt(idx);
+        }
+      });
       els.crateScroll.insertBefore(item, pads[1]);
       crateItems.push({videoId, ytIndex:idx, el:item, nameEl:item.querySelector('.mini-name')});
       initDragForItem(item);
@@ -1931,7 +1941,15 @@
   function syncCrateToPlayer() {
     if (!isReady || !crateItems.length) return;
     let ytIdx; try{ytIdx=player.getPlaylistIndex();}catch(e){ytIdx=-1;} if(ytIdx===-1)return;
-    const vi = crateItems.findIndex(c=>c.ytIndex===ytIdx); if (vi===-1 || vi===crateIndex) return; crateIndex = vi;
+    let currentIds = []; try { currentIds = player.getPlaylist() || []; } catch(e){}
+    let vi = -1;
+    if (currentIds.length > ytIdx) {
+      const vid = currentIds[ytIdx];
+      vi = crateItems.findIndex(c => c.videoId === vid);
+    }
+    if (vi === -1) vi = crateItems.findIndex(c => c.ytIndex === ytIdx);
+    if (vi === -1 || vi === crateIndex) return;
+    crateIndex = vi;
     crateItems.forEach((e,i)=>e.el.classList.toggle('active',i===vi));
     if (!userScrolling) {
       programmaticScroll = true; crateItems[vi].el.scrollIntoView({behavior:'smooth',block:'center'});
@@ -2111,14 +2129,15 @@
     lineEls.forEach((el,i) => { el.classList.toggle('active',i===ai); el.classList.toggle('near', Math.abs(i-ai)<=1 && i!==ai); });
     if (ai>=0 && lineEls[ai]) lineEls[ai].scrollIntoView({behavior:'smooth',block:'center'});
   }
-  function updateMiniPlayerCenterLyric(t) {
-    if (!currentLyricsData||!currentLyricsData.synced) { els.miniPlayerInfo.classList.remove('has-lyric'); return; }
+  function updateFloatingLyric(t) {
+    if (!miniPlayerOpen || miniLyricsOpen || fsOpen) { els.floatingLyric.classList.remove('show'); return; }
+    if (!currentLyricsData||!currentLyricsData.synced) { els.floatingLyric.classList.remove('show'); return; }
     let ai=-1; for(let i=currentLyricsData.synced.length-1;i>=0;i--){if(t>=currentLyricsData.synced[i].time){ai=i;break;}}
     if (ai>=0 && currentLyricsData.synced[ai].text.trim() !== '') {
-      els.miniPlayerLyric.textContent = currentLyricsData.synced[ai].text;
-      els.miniPlayerInfo.classList.add('has-lyric');
+      els.floatingLyric.textContent = currentLyricsData.synced[ai].text;
+      els.floatingLyric.classList.add('show');
     } else {
-      els.miniPlayerInfo.classList.remove('has-lyric');
+      els.floatingLyric.classList.remove('show');
     }
   }
   els.lyricsBtn.addEventListener('click', toggleLyrics); els.lyricsClose.addEventListener('click', toggleLyrics);
