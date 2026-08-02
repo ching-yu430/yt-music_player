@@ -61,7 +61,7 @@
     --brass-bright: #8C6A35;
     --shadow: rgba(80, 60, 40, 0.35);
   }
-  [data-theme="cream"] body { background: radial-gradient(circle at 50% 20%, #F5F0E6 0%, #E8DFD1 50%, #D4C9B8 100%); }
+  html[data-theme="cream"], [data-theme="cream"] body { background: radial-gradient(circle at 50% 20%, #F5F0E6 0%, #E8DFD1 50%, #D4C9B8 100%); }
   [data-theme="cream"] .fs-overlay:fullscreen { background: linear-gradient(rgba(232,223,209,0.7), rgba(232,223,209,0.8)), radial-gradient(circle at 50% 20%, #F5F0E6 0%, #E8DFD1 50%, #D4C9B8 100%); }
   
   /* Theme: Midnight */
@@ -80,7 +80,7 @@
     --terracotta: #1E3A8A;
     --shadow: rgba(0,0,0,0.7);
   }
-  [data-theme="midnight"] body { background: radial-gradient(circle at 50% 20%, #1E293B 0%, #0F172A 50%, #020617 100%); }
+  html[data-theme="midnight"], [data-theme="midnight"] body { background: radial-gradient(circle at 50% 20%, #1E293B 0%, #0F172A 50%, #020617 100%); }
   [data-theme="midnight"] .fs-overlay:fullscreen { background: linear-gradient(rgba(16,22,43,0.7), rgba(16,22,43,0.8)), radial-gradient(circle at 50% 20%, #1E293B 0%, #0F172A 50%, #020617 100%); }
 
   /* Theme: Retro Green */
@@ -102,17 +102,19 @@
     --terracotta: #E2725B;
     --shadow: rgba(10, 31, 21, 0.5);
   }
-  [data-theme="retro"] body { background: radial-gradient(circle at 50% 20%, #216345 0%, #133726 55%, #081610 100%); }
+  html[data-theme="retro"], [data-theme="retro"] body { background: radial-gradient(circle at 50% 20%, #216345 0%, #133726 55%, #081610 100%); }
   [data-theme="retro"] .fs-overlay:fullscreen { background: linear-gradient(rgba(8,22,16,0.75), rgba(8,22,16,0.85)), radial-gradient(circle at 50% 20%, #216345 0%, #133726 55%, #081610 100%); }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   html, body {
     min-height: 100vh;
+    min-height: 100dvh;
     background: radial-gradient(circle at 50% 20%, #C4A882 0%, #A88B66 50%, #8A7050 100%);
     font-family: 'Noto Serif TC', Georgia, 'PMingLiU', serif;
     color: var(--cream);
     overflow-x: hidden;
+    overscroll-behavior-y: none;
     transition: background 0.5s ease;
   }
 
