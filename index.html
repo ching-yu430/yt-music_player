@@ -4,416 +4,315 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>黑膠播放器</title>
+<meta name="description" content="復古黑膠唱片播放器介面，播放 YouTube 音樂播放清單">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+  /* ============================================================
+     DESIGN TOKENS – Earth & Coffee Palette
+     ============================================================ */
   :root {
-    --walnut-dark: #221812;
-    --walnut: #3a2a1e;
-    --walnut-light: #5c4530;
-    --felt: #8a1f1f;
-    --cream: #f2e8d5;
-    --cream-dim: #a89578;
-    --cream-dimmer: #7a6c56;
-    --brass: #b8874a;
-    --brass-bright: #d9a85c;
+    --espresso: #0D0806;
+    --dark-roast: #17100B;
+    --americano: #231810;
+    --mocha: #352518;
+    --walnut: #4A3628;
+    --cinnamon: #6B5344;
+    --caramel: #C4956A;
+    --latte: #D4B896;
+    --cream: #F0E6D3;
+    --cream-dim: #B8A48C;
+    --cream-muted: #7A6C56;
+    --brass: #C49B5C;
+    --brass-bright: #E0B870;
+    --terracotta: #9B4F3A;
+    --felt-green: #1E3320;
     --shadow: rgba(0,0,0,0.55);
+    --panel-radius: 16px;
+    --rig-height: min(68vh, 480px);
   }
 
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
   html, body {
-    margin: 0;
-    min-height: 100%;
-    background: radial-gradient(ellipse at 50% 15%, #ddc7a1 0%, #c9ab7c 55%, #b3925f 100%);
-    font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 50% 20%, #C4A882 0%, #A88B66 50%, #8A7050 100%);
+    font-family: 'Noto Serif TC', Georgia, 'PMingLiU', serif;
     color: var(--cream);
     overflow-x: hidden;
   }
 
+  /* ============================================================
+     STAGE – overall page wrapper
+     ============================================================ */
   .stage {
     min-height: 100vh;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 28px 16px 40px;
-    gap: 16px;
-    position: relative;
+    padding: 24px 20px 40px;
   }
 
-  /* ===== settings launcher button ===== */
-  .settings-fab {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: linear-gradient(180deg, var(--brass-bright), var(--brass));
-    border: 1px solid #1a120b;
-    color: #1c140e;
+  /* ============================================================
+     RIG – three-column layout
+     ============================================================ */
+  .rig {
     display: flex;
-    align-items: center;
+    align-items: stretch;
+    gap: 16px;
+    height: var(--rig-height);
+    max-width: 1060px;
+    width: 100%;
     justify-content: center;
+  }
+
+  /* ============================================================
+     SETTINGS FAB
+     ============================================================ */
+  .settings-fab {
+    position: fixed; top: 16px; right: 16px;
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(180deg, var(--brass-bright), var(--brass));
+    border: 1px solid var(--mocha);
+    color: var(--americano);
+    display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    box-shadow: 0 6px 16px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.3);
+    box-shadow: 0 4px 14px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.3);
     z-index: 50;
-    transition: transform 0.15s ease, opacity 0.15s ease;
+    transition: transform .15s ease;
   }
   .settings-fab:hover { transform: scale(1.08); }
 
-  /* ===== settings modal ===== */
+  /* ============================================================
+     SETTINGS MODAL
+     ============================================================ */
   .settings-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(8,6,4,0.72);
-    backdrop-filter: blur(3px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    padding: 20px;
+    position: fixed; inset: 0;
+    background: rgba(8,6,4,0.75);
+    backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
   }
   .settings-overlay.open { display: flex; }
+
   .settings-panel {
-    width: 100%;
-    max-width: 420px;
-    background: linear-gradient(180deg, #4a3624 0%, var(--walnut) 45%, var(--walnut-dark) 100%);
-    border: 1px solid #1a120b;
-    border-radius: 16px;
-    padding: 22px;
-    box-shadow: 0 30px 60px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.08);
+    width: 100%; max-width: 440px;
+    background: linear-gradient(180deg, var(--walnut) 0%, var(--mocha) 50%, var(--americano) 100%);
+    border: 1px solid var(--mocha);
+    border-radius: var(--panel-radius);
+    padding: 24px;
+    box-shadow: 0 30px 60px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
   }
   .settings-title {
-    font-size: 15px;
-    letter-spacing: 0.06em;
+    font-size: 15px; letter-spacing: 0.06em;
     color: var(--brass-bright);
     text-transform: uppercase;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: space-between;
   }
   .settings-close {
-    background: none;
-    border: none;
-    color: var(--cream-dim);
-    cursor: pointer;
-    padding: 4px;
-    line-height: 0;
+    background: none; border: none; color: var(--cream-dim);
+    cursor: pointer; padding: 4px; line-height: 0;
   }
   .settings-close:hover { color: var(--cream); }
+
   .settings-label {
-    font-size: 11px;
-    color: var(--cream-dimmer);
-    letter-spacing: 0.05em;
-    margin-bottom: 6px;
+    font-size: 11px; color: var(--cream-muted);
+    letter-spacing: 0.05em; margin-bottom: 6px;
   }
   .id-bar {
-    width: 100%;
-    display: flex;
-    gap: 8px;
+    width: 100%; display: flex; gap: 8px;
   }
   .id-bar input {
-    flex: 1;
-    background: #1c140e;
-    border: 1px solid var(--walnut-light);
-    color: var(--cream-dim);
-    padding: 10px 10px;
-    border-radius: 6px;
-    font-family: 'SF Mono', Menlo, monospace;
+    flex: 1; background: var(--espresso);
+    border: 1px solid var(--walnut); color: var(--cream-dim);
+    padding: 10px; border-radius: 6px;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
     font-size: 12px;
-    letter-spacing: 0.02em;
   }
   .id-bar input:focus { outline: 1px solid var(--brass); color: var(--cream); }
   .id-bar button {
-    background: var(--brass);
-    color: #1c140e;
-    border: none;
-    border-radius: 6px;
-    padding: 0 16px;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    font-family: inherit;
+    background: var(--brass); color: var(--americano);
+    border: none; border-radius: 6px; padding: 0 16px;
+    font-weight: 700; font-size: 12px; cursor: pointer;
+    font-family: inherit; letter-spacing: 0.04em;
+    transition: background .15s;
   }
   .id-bar button:hover { background: var(--brass-bright); }
 
   .saved-label {
-    font-size: 11px;
-    color: var(--cream-dimmer);
-    letter-spacing: 0.05em;
-    margin: 16px 0 6px;
+    font-size: 11px; color: var(--cream-muted);
+    letter-spacing: 0.05em; margin: 18px 0 6px;
   }
   .saved-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-height: 180px;
-    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 6px;
+    max-height: 200px; overflow-y: auto;
   }
   .saved-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 9px 10px;
-    border-radius: 6px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; padding: 9px 10px; border-radius: 6px;
     background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
-    transition: background 0.15s, border-color 0.15s;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: background .15s, border-color .15s;
   }
-  .saved-item:hover { background: rgba(255,255,255,0.09); }
-  .saved-item.active { border-color: var(--brass); background: rgba(184,135,74,0.18); }
+  .saved-item:hover { background: rgba(255,255,255,0.08); }
+  .saved-item.active { border-color: var(--brass); background: rgba(196,155,92,0.15); }
   .saved-name {
-    flex: 1;
-    font-size: 12.5px;
-    color: var(--cream-dim);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    flex: 1; font-size: 12.5px; color: var(--cream-dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     cursor: pointer;
   }
   .saved-item.active .saved-name { color: var(--brass-bright); font-weight: 600; }
   .saved-remove {
-    background: none;
-    border: none;
-    color: var(--cream-dimmer);
-    font-size: 16px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 2px 5px;
-    flex-shrink: 0;
-    border-radius: 4px;
+    background: none; border: none; color: var(--cream-muted);
+    font-size: 16px; line-height: 1; cursor: pointer;
+    padding: 2px 5px; border-radius: 4px;
   }
   .saved-remove:hover { color: var(--cream); background: rgba(0,0,0,0.25); }
 
-  /* ===== overall layout: crate + console ===== */
-  .rig {
-    display: flex;
-    align-items: stretch;
-    justify-content: center;
-    gap: 14px;
-  }
-  /* an invisible spacer the same width as the crate, placed after the
-     console. Without this, the console (and the main disc inside it)
-     would sit off-centre on screen - shifted right by roughly half the
-     crate's width, since the crate only exists on the left. Balancing
-     it with an equal-width empty spacer on the right means the console
-     always lands exactly in the middle of the screen, regardless of the
-     playlist panel. Hidden on narrow screens where the layout stacks
-     vertically instead (see the max-width:620px rule below), since
-     there's nothing to balance there. */
-  .rig-spacer {
-    width: 240px;
-    flex-shrink: 0;
-  }
-
-  /* ===== record crate (left playlist rail) ===== */
+  /* ============================================================
+     CRATE – left playlist rail
+     ============================================================ */
   .crate {
-    position: relative;
-    width: 240px;
-    height: 420px;
-    max-height: min(70vh, 460px);
-    background: linear-gradient(180deg, #402d1f 0%, var(--walnut-dark) 100%);
-    border-radius: 14px;
-    border: 1px solid #1a120b;
-    box-shadow:
-      0 20px 40px var(--shadow),
-      inset 0 1px 0 rgba(255,255,255,0.06),
-      inset 0 -4px 10px rgba(0,0,0,0.4);
+    width: 220px; flex-shrink: 0;
+    background: linear-gradient(180deg, var(--walnut) 0%, var(--americano) 100%);
+    border-radius: var(--panel-radius);
+    border: 1px solid rgba(74,54,40,0.6);
+    box-shadow: 0 16px 40px var(--shadow),
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      inset 0 -4px 10px rgba(0,0,0,0.35);
     overflow: hidden;
-    flex-shrink: 0;
+    position: relative;
   }
   .crate-label {
-    position: absolute;
-    top: 8px;
-    left: 0; right: 0;
-    text-align: center;
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    color: var(--cream-dimmer);
-    text-transform: uppercase;
-    z-index: 30;
-    pointer-events: none;
+    position: absolute; top: 8px; left: 0; right: 0;
+    text-align: center; font-size: 9px; letter-spacing: 0.18em;
+    color: var(--cream-muted); text-transform: uppercase;
+    z-index: 30; pointer-events: none;
   }
   .crate-scroll {
-    height: 100%;
-    width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
+    height: 100%; width: 100%;
+    overflow-y: auto; overflow-x: hidden;
     scroll-snap-type: y proximity;
-    scrollbar-width: none;
-    padding-top: 26px;
+    scrollbar-width: none; padding-top: 26px;
   }
   .crate-scroll::-webkit-scrollbar { display: none; }
-  /* fallback sizes before JS measures the crate and computes real
-     centering padding in updateCratePadding() - see script. */
   .crate-pad { height: 160px; }
 
-  /* simple, crisp vertical list: square cover (with a subtle stacked-record
-     depth effect behind it) on the left, track name on the right */
+  /* --- record items in crate --- */
   .record-item {
-    /* center-snap: the item nearest the vertical middle of the crate is
-       the one considered "selected" (and thus the one that plays) -
-       see selectNearestCrateItem()/syncCrateToPlayer() in the script,
-       which target that same center line rather than the top edge. */
     scroll-snap-align: center;
     position: relative;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    width: calc(100% - 24px);
-    margin: 0 12px 18px;
-    padding: 6px;
-    border-radius: 10px;
-    cursor: pointer;
-    transform-origin: center;
+    display: flex; align-items: center; gap: 12px;
+    width: calc(100% - 20px); margin: 0 10px 14px;
+    padding: 6px; border-radius: 10px;
+    cursor: pointer; transform-origin: center;
     will-change: transform, opacity;
-    /* background/box-shadow stay snappy; transform+opacity get a short
-       ease so the scale/fade driven by updateAccordionScale() on every
-       scroll tick reads as a smooth accordion-like expansion around the
-       centered row rather than a jump. */
-    transition: transform 0.15s ease-out, opacity 0.15s ease-out, background 0.15s ease;
+    transition: transform .15s ease-out, opacity .15s ease-out, background .15s ease;
+    touch-action: none;
+  }
+  .record-item.dragging {
+    opacity: 0.3 !important;
   }
   .record-item .mini-disc {
-    flex-shrink: 0;
-    width: 56px;
-    height: 56px;
-    position: relative;
-    z-index: 0; /* establishes a stacking context so the ::before/::after
-      negative z-index sleeves stay local to this item - never lost
-      behind neighbouring rows or the crate's own background - while the
-      actual cover art lives in its own child layer (below) that is
-      explicitly stacked above them. */
+    flex-shrink: 0; width: 52px; height: 52px;
+    position: relative; z-index: 0;
   }
-  /* the real cover art is its own layer, explicitly stacked above the
-     offset sleeves below - this is what actually guarantees "squares
-     behind, cover in front", rather than relying on paint order of the
-     mini-disc's own background (which negative z-index children can
-     paint over). */
   .record-item .mini-disc-cover {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
+    position: absolute; inset: 0; z-index: 1;
     border-radius: 7px;
-    background-size: cover;
-    background-position: center;
-    background-color: var(--felt);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    background-size: cover; background-position: center;
+    background-color: var(--terracotta);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.5);
   }
-  /* two faint, rotated, offset squares behind the cover build up a
-     "stack of records" (cover + these 2 = 3 layers total) - each one a
-     little further back, a little more rotated, and a little dimmer,
-     like sleeves peeking out from under the top cover. A thin lighter
-     edge on each keeps every layer readable as a distinct record rather
-     than one blurry shadow. */
   .record-item .mini-disc::before,
   .record-item .mini-disc::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 7px;
-    background: #17110c;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(242,232,213,0.06);
+    content: ''; position: absolute; inset: 0;
+    border-radius: 7px; background: var(--espresso);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(240,230,211,0.05);
     z-index: -1;
   }
   .record-item .mini-disc::before {
-    transform: translate(5px, 5px) rotate(6deg);
-    opacity: 0.8;
+    transform: translate(4px, 4px) rotate(5deg); opacity: 0.7;
   }
   .record-item .mini-disc::after {
-    transform: translate(10px, 9px) rotate(-7deg);
-    opacity: 0.5;
-    background: #120d09;
+    transform: translate(8px, 8px) rotate(-6deg); opacity: 0.4;
+    background: #0A0705;
   }
   .record-item .mini-name {
-    flex: 1;
-    min-width: 0;
-    font-size: 12px;
-    line-height: 1.3;
+    flex: 1; min-width: 0; font-size: 12px; line-height: 1.3;
     color: var(--cream-dim);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    transition: color 0.15s ease, font-weight 0.15s ease;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    transition: color .15s, font-weight .15s;
   }
-  .record-item.active {
-    background: rgba(216,168,92,0.1);
-  }
+  .record-item.active { background: rgba(196,155,92,0.1); }
   .record-item.active .mini-disc-cover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.6), 0 0 0 2px var(--brass);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.5), 0 0 0 2px var(--brass);
   }
   .record-item.active .mini-name {
-    color: var(--brass-bright);
-    font-weight: 700;
+    color: var(--brass-bright); font-weight: 700;
   }
 
+  /* drag ghost */
+  .drag-ghost {
+    opacity: 0.85 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    background: var(--mocha) !important;
+    border: 1px solid var(--brass) !important;
+    pointer-events: none;
+    z-index: 999;
+  }
 
-  /* ===== turntable console ===== */
-  .console {
+  /* ============================================================
+     TURNTABLE – center column
+     ============================================================ */
+  .turntable-section {
+    flex-shrink: 0;
+    aspect-ratio: 1;
+    height: 100%;
     position: relative;
-    width: min(80vw, 340px);
-    background:
-      linear-gradient(180deg, #4a3624 0%, var(--walnut) 45%, var(--walnut-dark) 100%);
-    border-radius: 18px;
-    padding: 26px 22px 20px;
-    box-shadow:
-      0 30px 60px var(--shadow),
-      inset 0 1px 0 rgba(255,255,255,0.08),
-      inset 0 -6px 14px rgba(0,0,0,0.4);
-    border: 1px solid #1a120b;
+    background: linear-gradient(180deg, var(--walnut) 0%, var(--mocha) 50%, var(--americano) 100%);
+    border-radius: var(--panel-radius);
+    border: 1px solid rgba(74,54,40,0.6);
+    box-shadow: 0 20px 50px var(--shadow),
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      inset 0 -4px 12px rgba(0,0,0,0.35);
+    padding: 20px;
+    display: flex; align-items: center; justify-content: center;
   }
-
-  .console::before {
-    content: '';
-    position: absolute;
-    inset: 6px;
+  .turntable-section::before {
+    content: ''; position: absolute; inset: 6px;
     border-radius: 12px;
-    border: 1px solid rgba(216,168,92,0.15);
+    border: 1px solid rgba(196,155,92,0.1);
     pointer-events: none;
   }
 
   .platter-wrap {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
   }
 
   .mat {
     position: absolute;
-    inset: 0;
+    width: 92%; height: 92%;
+    left: 4%; top: 4%;
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 50%, #2a2a2a 0%, #1a1a1a 70%, #111 100%);
-    box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 6px 18px rgba(0,0,0,0.6);
+    background: radial-gradient(circle, #252520 0%, #1a1a16 65%, #111 100%);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 6px 18px rgba(0,0,0,0.5);
   }
 
   .disc {
     position: absolute;
-    inset: 4%;
+    width: 84%; height: 84%;
+    left: 8%; top: 8%;
     border-radius: 50%;
-    overflow: hidden; /* the circular clip boundary lives here, on an
-      element that NEVER transforms - this is the fix. Previously the
-      spin animation and the circular clip were on the same element;
-      under GPU compositing, an animated (rotating) clip mask can
-      occasionally fail to keep up with every frame, letting the square
-      cover art "leak" past the circle mid-spin (exactly what showed up
-      in the screenshot). By keeping this clip fully static and moving
-      the rotation to a separate inner layer (.disc-spin) below, the
-      browser only ever has to clip a shape that isn't itself moving -
-      the simplest, most reliable form of clipping - so the cover is
-      guaranteed to render as a perfect circle at every single frame. */
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), inset 0 0 40px rgba(0,0,0,0.6);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.03), inset 0 0 40px rgba(0,0,0,0.5);
   }
-
   .disc-spin {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     border-radius: 50%;
     background:
       repeating-radial-gradient(circle at 50% 50%,
@@ -421,293 +320,515 @@
         #171717 3px, #171717 4px);
     animation: spin 6s linear infinite;
     animation-play-state: paused;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
   }
   .disc.playing .disc-spin { animation-play-state: running; }
 
-  /* the album cover fills nearly the entire record, leaving only a thin
-     black groove ring showing at the outer edge. .label-frame is an
-     absolutely-positioned square (equal inset on all sides of the
-     already-square .disc-spin), so its dimensions never depend on
-     aspect-ratio support or flex sizing quirks - it is guaranteed to be
-     a square no matter what. .label sits inside it at 100% width/height
-     and is clipped to a circle twice over (border-radius + clip-path)
-     as a belt-and-braces safety net, and the <img> itself repeats the
-     same double clip and always uses object-fit:cover so any source
-     photo - portrait, landscape, or non-square - is first cropped to a
-     square and then punched into a perfect circle. All of this sits
-     inside the ROTATING layer, while the actual circular clip boundary
-     (the .disc element above) stays static - see the comment on .disc. */
   .label-frame {
-    position: absolute;
-    inset: 4%;
-    border-radius: 50%;
+    position: absolute; inset: 4%; border-radius: 50%;
   }
   .label {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
+    width: 100%; height: 100%; border-radius: 50%;
     overflow: hidden;
     clip-path: circle(50% at 50% 50%);
-    -webkit-clip-path: circle(50% at 50% 50%);
-    background-color: var(--felt);
+    background-color: var(--terracotta);
     border: 2px solid rgba(0,0,0,0.5);
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 3px 16px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,0,0,0.35);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.05),
+      0 3px 16px rgba(0,0,0,0.5),
+      inset 0 0 30px rgba(0,0,0,0.3);
     position: relative;
   }
   .label img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+    display: block; width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
     border-radius: 50%;
     clip-path: circle(50% at 50% 50%);
-    -webkit-clip-path: circle(50% at 50% 50%);
-    /* many source thumbnails have their own straight-edged content (a
-       tilted photo, a plain-colour margin, letterboxing) sitting close
-       to the edge of the square crop. Even though the CSS clip below is
-       a mathematically perfect circle, those straight edges/margins can
-       read as "not quite round" right at the boundary. Scaling the
-       image up crops that outer margin away so every pixel touching the
-       circle's edge is genuine cover-art, not the thumbnail's own
-       background. 1.55x was tuned against a worst-case test thumbnail
-       (a tilted square inset with visible corner margin) - at 1.22x
-       about 5% of the visible circle was still that margin colour; at
-       1.55x it drops to ~0.008%, i.e. gone. */
-    transform: scale(1.55);
-    transform-origin: center;
+    transform: scale(1.55); transform-origin: center;
   }
   .label::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
+    content: ''; position: absolute;
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 8%;
-    height: 8%;
-    border-radius: 50%;
+    width: 8%; height: 8%; border-radius: 50%;
     background: #0c0c0c;
     box-shadow: inset 0 0 3px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1);
   }
 
   @keyframes spin {
     from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    to   { transform: rotate(360deg); }
   }
 
+  /* ============================================================
+     TONEARM – realistic SVG
+     ============================================================ */
   .tonearm {
     position: absolute;
-    top: -2%;
-    right: 2%;
-    width: 34%;
-    height: 34%;
-    transform-origin: 88% 12%;
-    transform: rotate(-18deg);
-    transition: transform 0.6s cubic-bezier(.4,0,.2,1);
+    top: -2%; right: 0%;
+    width: 36%; height: 36%;
+    transform-origin: 82% 14%;
+    transform: rotate(-20deg);
+    transition: transform .6s cubic-bezier(.4,0,.2,1);
     z-index: 5;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
   }
   .tonearm.down { transform: rotate(6deg); }
-
   .tonearm svg { width: 100%; height: 100%; overflow: visible; }
 
-  .meta {
-    margin-top: 20px;
-    text-align: center;
-    min-height: 54px;
-  }
-  .track-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--cream);
-    letter-spacing: 0.01em;
-    line-height: 1.3;
+  /* ============================================================
+     TRACK PANEL – right column
+     ============================================================ */
+  .track-panel {
+    flex: 1; min-width: 200px; max-width: 280px;
+    background: linear-gradient(180deg, var(--walnut) 0%, var(--mocha) 50%, var(--americano) 100%);
+    border-radius: var(--panel-radius);
+    border: 1px solid rgba(74,54,40,0.6);
+    box-shadow: 0 16px 40px var(--shadow),
+      inset 0 1px 0 rgba(255,255,255,0.05),
+      inset 0 -4px 10px rgba(0,0,0,0.35);
     overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+  }
+  .track-panel-inner {
+    height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 24px 20px;
+    gap: 14px;
+  }
+
+  .meta { text-align: center; min-height: 48px; }
+  .track-title {
+    font-size: 16px; font-weight: 600;
+    color: var(--cream); letter-spacing: 0.01em;
+    line-height: 1.35;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
   .track-artist {
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--cream-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    font-family: 'SF Mono', Menlo, monospace;
+    margin-top: 4px; font-size: 11px;
+    color: var(--cream-dim); text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
   }
 
   .progress-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 16px;
+    display: flex; align-items: center; gap: 8px;
   }
   .time {
-    font-family: 'SF Mono', Menlo, monospace;
-    font-size: 10.5px;
-    color: var(--cream-dim);
-    width: 34px;
-    text-align: center;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 10px; color: var(--cream-dim);
+    width: 32px; text-align: center;
   }
   .bar {
-    flex: 1;
-    height: 4px;
-    background: rgba(255,255,255,0.12);
-    border-radius: 2px;
-    position: relative;
-    cursor: pointer;
+    flex: 1; height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px; position: relative; cursor: pointer;
   }
   .bar-fill {
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 0%;
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 0%; border-radius: 2px;
     background: linear-gradient(90deg, var(--brass), var(--brass-bright));
-    border-radius: 2px;
   }
   .bar-knob {
-    position: absolute;
-    top: 50%;
+    position: absolute; top: 50%;
     width: 10px; height: 10px;
-    background: var(--brass-bright);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    left: 0%;
+    background: var(--brass-bright); border-radius: 50%;
+    transform: translate(-50%, -50%); left: 0%;
     box-shadow: 0 0 0 3px rgba(0,0,0,0.3);
+    transition: transform .1s;
   }
+  .bar:hover .bar-knob { transform: translate(-50%,-50%) scale(1.3); }
 
   .controls {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 22px;
-    margin-top: 18px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px;
   }
   .ctrl-btn {
-    background: none;
-    border: none;
-    color: var(--cream);
-    cursor: pointer;
-    padding: 6px;
-    opacity: 0.85;
-    transition: opacity 0.15s, transform 0.15s;
+    background: none; border: none; color: var(--cream);
+    cursor: pointer; padding: 5px; opacity: 0.8;
+    transition: opacity .15s, transform .15s;
+    display: flex; align-items: center; justify-content: center;
   }
   .ctrl-btn:hover { opacity: 1; transform: scale(1.08); }
   .ctrl-btn.main {
-    width: 50px; height: 50px;
-    border-radius: 50%;
+    width: 46px; height: 46px; border-radius: 50%;
     background: linear-gradient(180deg, var(--brass-bright), var(--brass));
-    color: #1c140e;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+    color: var(--americano); padding: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.3);
   }
   .ctrl-btn.main:hover { opacity: 1; }
 
-  #shuffleBtn { margin-right: -4px; }
-  #shuffleBtn.active {
-    color: var(--brass-bright);
-    opacity: 1;
+  .ctrl-btn.active { color: var(--brass-bright); opacity: 1; }
+  .ctrl-btn.active::after {
+    content: ''; display: block; width: 3px; height: 3px;
+    border-radius: 50%; background: var(--brass-bright);
+    position: absolute; bottom: -2px;
   }
-  #shuffleBtn.active::after {
-    content: '';
-    display: block;
-    width: 3px; height: 3px;
-    border-radius: 50%;
-    background: var(--brass-bright);
-    margin: 3px auto 0;
-  }
+  .ctrl-btn { position: relative; }
 
   .volume-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 14px;
-    padding: 0 4px;
+    display: flex; align-items: center; gap: 8px; padding: 0 2px;
   }
   .vol-btn {
-    background: none;
-    border: none;
-    color: var(--cream-dim);
-    cursor: pointer;
-    padding: 4px;
-    opacity: 0.85;
-    flex-shrink: 0;
-    transition: opacity 0.15s, color 0.15s;
+    background: none; border: none; color: var(--cream-dim);
+    cursor: pointer; padding: 3px; opacity: 0.85;
+    flex-shrink: 0; transition: opacity .15s, color .15s;
+    display: flex; align-items: center;
   }
   .vol-btn:hover { opacity: 1; color: var(--cream); }
   .vol-slider {
-    flex: 1;
-    -webkit-appearance: none;
-    appearance: none;
-    height: 4px;
-    border-radius: 2px;
-    background: linear-gradient(90deg, var(--brass), var(--brass-bright) 70%, rgba(255,255,255,0.12) 70%);
+    flex: 1; -webkit-appearance: none; appearance: none;
+    height: 4px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--brass), var(--brass-bright) 70%, rgba(255,255,255,0.1) 70%);
     cursor: pointer;
   }
   .vol-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 12px; height: 12px;
-    border-radius: 50%;
+    -webkit-appearance: none; appearance: none;
+    width: 12px; height: 12px; border-radius: 50%;
     background: var(--brass-bright);
     box-shadow: 0 0 0 3px rgba(0,0,0,0.3);
     cursor: pointer;
   }
   .vol-slider::-moz-range-thumb {
-    width: 12px; height: 12px;
-    border: none;
-    border-radius: 50%;
-    background: var(--brass-bright);
-    box-shadow: 0 0 0 3px rgba(0,0,0,0.3);
-    cursor: pointer;
+    width: 12px; height: 12px; border: none;
+    border-radius: 50%; background: var(--brass-bright);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.3); cursor: pointer;
   }
   .vol-slider::-moz-range-track {
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(255,255,255,0.12);
+    height: 4px; border-radius: 2px;
+    background: rgba(255,255,255,0.1);
   }
+
+  .extra-controls {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .extra-btn {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+    color: var(--cream-dim); cursor: pointer;
+    padding: 6px 10px; border-radius: 6px;
+    font-size: 11px; display: flex; align-items: center; gap: 5px;
+    font-family: inherit;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .extra-btn:hover { background: rgba(255,255,255,0.1); color: var(--cream); }
+  .extra-btn.active { border-color: var(--brass); color: var(--brass-bright); background: rgba(196,155,92,0.12); }
 
   .status-line {
-    margin-top: 14px;
-    text-align: center;
-    font-size: 11px;
-    color: var(--cream-dim);
-    font-family: 'SF Mono', Menlo, monospace;
-    letter-spacing: 0.04em;
-    min-height: 14px;
+    text-align: center; font-size: 10px;
+    color: var(--cream-muted);
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    letter-spacing: 0.04em; min-height: 14px;
   }
 
+  /* ============================================================
+     LYRICS PANEL – slide-in from right
+     ============================================================ */
+  .lyrics-panel {
+    position: fixed; top: 0; right: 0;
+    width: 340px; max-width: 90vw; height: 100vh;
+    background: linear-gradient(180deg, var(--americano) 0%, var(--dark-roast) 100%);
+    border-left: 1px solid var(--walnut);
+    box-shadow: -8px 0 30px rgba(0,0,0,0.5);
+    z-index: 90;
+    transform: translateX(100%);
+    transition: transform .35s cubic-bezier(.4,0,.2,1);
+    display: flex; flex-direction: column;
+  }
+  .lyrics-panel.open { transform: translateX(0); }
+
+  .lyrics-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 14px; color: var(--brass-bright);
+    letter-spacing: 0.06em; flex-shrink: 0;
+  }
+  .lyrics-header button {
+    background: none; border: none; color: var(--cream-dim);
+    cursor: pointer; padding: 4px; font-size: 18px;
+  }
+  .lyrics-header button:hover { color: var(--cream); }
+
+  .lyrics-body {
+    flex: 1; overflow-y: auto; padding: 20px;
+    scrollbar-width: thin; scrollbar-color: var(--walnut) transparent;
+  }
+  .lyrics-body::-webkit-scrollbar { width: 4px; }
+  .lyrics-body::-webkit-scrollbar-thumb { background: var(--walnut); border-radius: 2px; }
+
+  .lyrics-placeholder {
+    color: var(--cream-muted); text-align: center;
+    font-size: 13px; margin-top: 40px;
+  }
+  .lyrics-line {
+    padding: 6px 0; font-size: 14px; line-height: 1.7;
+    color: var(--cream-dim);
+    transition: color .3s, font-size .3s, transform .3s;
+  }
+  .lyrics-line.active {
+    color: var(--brass-bright); font-size: 16px; font-weight: 600;
+    transform: translateX(4px);
+  }
+  .lyrics-line.past { color: var(--cream-muted); }
+
+  /* ============================================================
+     FULLSCREEN VISUALIZATION
+     ============================================================ */
+  .fs-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: var(--espresso);
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .fs-overlay.open { display: flex; }
+
+  .fs-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 40%, rgba(196,149,106,0.08), transparent 60%),
+                radial-gradient(ellipse at 70% 60%, rgba(155,79,58,0.06), transparent 60%);
+    animation: fs-bg-shift 10s ease-in-out infinite alternate;
+  }
+  @keyframes fs-bg-shift {
+    from { opacity: 0.6; transform: scale(1); }
+    to   { opacity: 1; transform: scale(1.1); }
+  }
+
+  .fs-particle {
+    position: absolute; border-radius: 50%;
+    background: rgba(196,155,92,0.15);
+    animation: fs-float linear infinite;
+  }
+  @keyframes fs-float {
+    0%   { transform: translateY(0) scale(0); opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: 1; }
+    100% { transform: translateY(-110vh) scale(1); opacity: 0; }
+  }
+
+  .fs-content {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 28px;
+  }
+  .fs-disc-wrap {
+    width: min(55vw, 55vh, 420px);
+    aspect-ratio: 1;
+    position: relative;
+  }
+  .fs-disc {
+    width: 100%; height: 100%; border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(196,155,92,0.15),
+      0 0 120px rgba(0,0,0,0.5);
+  }
+  .fs-disc-spin {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: repeating-radial-gradient(circle at 50% 50%,
+      #0c0c0c 0px, #0c0c0c 2px, #171717 3px, #171717 4px);
+    animation: spin 6s linear infinite;
+    animation-play-state: paused;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fs-overlay.playing .fs-disc-spin { animation-play-state: running; }
+  .fs-label-frame { position: absolute; inset: 4%; border-radius: 50%; }
+  .fs-label {
+    width: 100%; height: 100%; border-radius: 50%;
+    overflow: hidden; clip-path: circle(50% at 50% 50%);
+    background-color: var(--terracotta);
+    border: 2px solid rgba(0,0,0,0.5);
+    box-shadow: 0 3px 16px rgba(0,0,0,0.5), inset 0 0 30px rgba(0,0,0,0.3);
+    position: relative;
+  }
+  .fs-label img {
+    display: block; width: 100%; height: 100%;
+    object-fit: cover; border-radius: 50%;
+    clip-path: circle(50% at 50% 50%);
+    transform: scale(1.55); transform-origin: center;
+  }
+  .fs-label::after {
+    content: ''; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 8%; height: 8%; border-radius: 50%;
+    background: #0c0c0c;
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1);
+  }
+
+  .fs-glow {
+    position: absolute; inset: -20%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(196,155,92,0.1) 0%, transparent 60%);
+    animation: fs-pulse 3s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes fs-pulse {
+    from { transform: scale(0.9); opacity: 0.5; }
+    to   { transform: scale(1.15); opacity: 1; }
+  }
+
+  .fs-info {
+    text-align: center; position: relative; z-index: 1;
+    max-width: 400px;
+  }
+  .fs-title {
+    font-size: 22px; font-weight: 600; color: var(--cream);
+    line-height: 1.3; margin-bottom: 6px;
+  }
+  .fs-artist {
+    font-size: 13px; color: var(--cream-dim);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .fs-progress {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 16px;
+  }
+  .fs-progress .time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--cream-dim); width: 36px; text-align: center;
+  }
+  .fs-bar {
+    flex: 1; height: 3px; background: rgba(255,255,255,0.1);
+    border-radius: 2px; position: relative; min-width: 160px;
+  }
+  .fs-bar-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 0%; border-radius: 2px;
+    background: linear-gradient(90deg, var(--brass), var(--brass-bright));
+  }
+
+  .fs-close-btn {
+    position: fixed; top: 20px; right: 20px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    color: var(--cream-dim); width: 40px; height: 40px;
+    border-radius: 50%; cursor: pointer; font-size: 18px;
+    z-index: 201; transition: background .15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fs-close-btn:hover { background: rgba(255,255,255,0.15); color: var(--cream); }
+
+  /* ============================================================
+     TOAST NOTIFICATIONS
+     ============================================================ */
+  .toast-container {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 300; display: flex; flex-direction: column; gap: 8px;
+    align-items: center; pointer-events: none;
+  }
+  .toast {
+    background: var(--mocha); border: 1px solid var(--walnut);
+    color: var(--cream); padding: 8px 20px;
+    border-radius: 24px; font-size: 12px;
+    box-shadow: 0 4px 16px var(--shadow);
+    opacity: 0; transform: translateY(10px);
+    animation: toast-in .25s ease forwards, toast-out .25s ease 1.5s forwards;
+  }
+  @keyframes toast-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toast-out {
+    to { opacity: 0; transform: translateY(-10px); }
+  }
+
+  /* ============================================================
+     KEYBOARD HINT
+     ============================================================ */
+  .kbd-hint-btn {
+    position: fixed; bottom: 16px; right: 16px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    color: var(--cream-muted); cursor: pointer; font-size: 14px;
+    z-index: 50; transition: background .15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .kbd-hint-btn:hover { background: rgba(255,255,255,0.12); color: var(--cream); }
+
+  .kbd-overlay {
+    position: fixed; inset: 0;
+    background: rgba(8,6,4,0.8); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100;
+  }
+  .kbd-overlay.open { display: flex; }
+  .kbd-panel {
+    background: linear-gradient(180deg, var(--walnut), var(--americano));
+    border: 1px solid var(--mocha); border-radius: var(--panel-radius);
+    padding: 24px; max-width: 360px; width: 90%;
+    box-shadow: 0 20px 50px var(--shadow);
+  }
+  .kbd-panel h3 {
+    color: var(--brass-bright); font-size: 14px;
+    letter-spacing: 0.06em; margin-bottom: 16px;
+    text-align: center;
+  }
+  .kbd-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 0; font-size: 12px;
+  }
+  .kbd-row span:first-child { color: var(--cream-dim); }
+  .kbd-key {
+    background: var(--espresso); border: 1px solid var(--walnut);
+    color: var(--cream); padding: 2px 8px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  }
+
+  /* ============================================================
+     HIDDEN YT PLAYER
+     ============================================================ */
   #yt-host {
-    position: fixed;
-    width: 2px; height: 2px;
-    top: -10px; left: -10px;
-    opacity: 0.01;
+    position: fixed; width: 2px; height: 2px;
+    top: -10px; left: -10px; opacity: 0.01;
     pointer-events: none;
   }
 
-  @media (max-width: 620px) {
-    .rig { flex-direction: column-reverse; align-items: center; }
-    .crate {
-      width: min(92vw, 400px);
-      height: 220px;
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 900px) {
+    .rig {
+      flex-direction: column;
+      align-items: center;
+      height: auto;
+      max-width: 420px;
     }
-    .rig-spacer { display: none; }
+    .crate {
+      width: 100%; height: 200px;
+      order: 3;
+    }
+    .turntable-section {
+      height: auto; width: min(85vw, 360px);
+      aspect-ratio: 1;
+      order: 1;
+    }
+    .track-panel {
+      width: 100%; max-width: 100%;
+      order: 2;
+    }
+    .track-panel-inner { padding: 16px; }
+  }
+
+  @media (max-width: 480px) {
+    .turntable-section { width: min(92vw, 320px); padding: 14px; }
+    .track-panel-inner { padding: 14px 12px; gap: 10px; }
+    .track-title { font-size: 14px; }
+    .lyrics-panel { width: 100%; max-width: 100%; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .disc-spin { animation: none; }
+    .disc-spin, .fs-disc-spin { animation: none; }
     .tonearm { transition: none; }
+    .toast { animation: none; opacity: 1; transform: none; }
   }
 </style>
 </head>
 <body>
 
+<!-- ============== SETTINGS FAB ============== -->
 <button class="settings-fab" id="settingsFab" title="設定">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c.4 0 .78.03 1.16.08l.5 2.1c.53.14 1.03.34 1.5.6l1.83-1.13a9.06 9.06 0 0 1 1.86 1.86l-1.13 1.83c.26.47.46.97.6 1.5l2.1.5c.05.38.08.76.08 1.16s-.03.78-.08 1.16l-2.1.5a6.9 6.9 0 0 1-.6 1.5l1.13 1.83a9.06 9.06 0 0 1-1.86 1.86l-1.83-1.13c-.47.26-.97.46-1.5.6l-.5 2.1c-.38.05-.76.08-1.16.08s-.78-.03-1.16-.08l-.5-2.1a6.9 6.9 0 0 1-1.5-.6l-1.83 1.13a9.06 9.06 0 0 1-1.86-1.86l1.13-1.83a6.9 6.9 0 0 1-.6-1.5l-2.1-.5C3.03 12.78 3 12.4 3 12s.03-.78.08-1.16l2.1-.5c.14-.53.34-1.03.6-1.5L4.65 6.99a9.06 9.06 0 0 1 1.86-1.86l1.83 1.13c.47-.26.97-.46 1.5-.6l.5-2.1C10.22 3.03 10.6 3 12 3zm0 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
 </button>
 
+<!-- ============== SETTINGS MODAL ============== -->
 <div class="settings-overlay" id="settingsOverlay">
   <div class="settings-panel">
     <div class="settings-title">
@@ -718,19 +839,88 @@
     </div>
     <div class="settings-label">YouTube 播放清單連結或 ID</div>
     <div class="id-bar">
-      <input id="playlistInput" type="text" placeholder="貼上播放清單連結或 ID" value="PLaLEwIkg0K_s">
+      <input id="playlistInput" type="text" placeholder="貼上播放清單連結或 ID">
       <button id="loadBtn">載入</button>
     </div>
-
-    <div class="saved-label" id="savedLabel" style="display:none;">已儲存的清單(點選套用)</div>
+    <div class="saved-label" id="savedLabel" style="display:none;">已儲存的清單（點選套用）</div>
     <div class="saved-list" id="savedList"></div>
   </div>
 </div>
 
-<div class="stage">
+<!-- ============== LYRICS PANEL ============== -->
+<div class="lyrics-panel" id="lyricsPanel">
+  <div class="lyrics-header">
+    <span>♫ 歌詞</span>
+    <button id="lyricsClose">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.41 1.41 6.3 6.3-6.3 6.3 1.41 1.41 6.3-6.3 6.3 6.3 1.41-1.41-6.3-6.3 6.3-6.3z"/></svg>
+    </button>
+  </div>
+  <div class="lyrics-body" id="lyricsBody">
+    <p class="lyrics-placeholder">播放歌曲後自動搜尋歌詞</p>
+  </div>
+</div>
 
+<!-- ============== FULLSCREEN VISUALIZATION ============== -->
+<div class="fs-overlay" id="fsOverlay">
+  <div class="fs-bg"></div>
+  <div id="fsParticles"></div>
+  <div class="fs-content">
+    <div class="fs-disc-wrap">
+      <div class="fs-glow"></div>
+      <div class="fs-disc" id="fsDisc">
+        <div class="fs-disc-spin">
+          <div class="fs-label-frame">
+            <div class="fs-label"><img id="fsAlbumImg" alt=""></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fs-info">
+      <div class="fs-title" id="fsTitle">—</div>
+      <div class="fs-artist" id="fsArtist">—</div>
+      <div class="fs-progress">
+        <span class="time" id="fsCurTime">0:00</span>
+        <div class="fs-bar"><div class="fs-bar-fill" id="fsBarFill"></div></div>
+        <span class="time" id="fsDurTime">0:00</span>
+      </div>
+    </div>
+  </div>
+  <button class="fs-close-btn" id="fsCloseBtn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.41 1.41 6.3 6.3-6.3 6.3 1.41 1.41 6.3-6.3 6.3 6.3 1.41-1.41-6.3-6.3 6.3-6.3z"/></svg>
+  </button>
+</div>
+
+<!-- ============== TOAST ============== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ============== KEYBOARD HINT BUTTON ============== -->
+<button class="kbd-hint-btn" id="kbdHintBtn" title="鍵盤快捷鍵">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 5H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2zm0 3h2v2h-2zM8 8h2v2H8zm0 3h2v2H8zm-1 2H5v-2h2zm0-3H5V8h2zm9 7H8v-2h8zm0-4h-2v-2h2zm0-3h-2V8h2zm3 3h-2v-2h2zm0-3h-2V8h2z"/></svg>
+</button>
+
+<!-- ============== KEYBOARD HINT OVERLAY ============== -->
+<div class="kbd-overlay" id="kbdOverlay">
+  <div class="kbd-panel">
+    <h3>⌨ 鍵盤快捷鍵</h3>
+    <div class="kbd-row"><span>播放 / 暫停</span><span class="kbd-key">Space</span></div>
+    <div class="kbd-row"><span>上一首</span><span class="kbd-key">←</span></div>
+    <div class="kbd-row"><span>下一首</span><span class="kbd-key">→</span></div>
+    <div class="kbd-row"><span>音量提高</span><span class="kbd-key">↑</span></div>
+    <div class="kbd-row"><span>音量降低</span><span class="kbd-key">↓</span></div>
+    <div class="kbd-row"><span>靜音</span><span class="kbd-key">M</span></div>
+    <div class="kbd-row"><span>隨機播放</span><span class="kbd-key">S</span></div>
+    <div class="kbd-row"><span>循環模式</span><span class="kbd-key">R</span></div>
+    <div class="kbd-row"><span>歌詞面板</span><span class="kbd-key">L</span></div>
+    <div class="kbd-row"><span>全螢幕視覺化</span><span class="kbd-key">F</span></div>
+    <div class="kbd-row"><span>關閉此面板</span><span class="kbd-key">Esc</span></div>
+  </div>
+</div>
+
+<!-- ============== MAIN STAGE ============== -->
+<div class="stage">
   <div class="rig">
 
+    <!-- LEFT: Playlist Crate -->
     <div class="crate">
       <div class="crate-label">播放清單</div>
       <div class="crate-scroll" id="crateScroll">
@@ -739,7 +929,8 @@
       </div>
     </div>
 
-    <div class="console">
+    <!-- CENTER: Turntable -->
+    <div class="turntable-section">
       <div class="platter-wrap">
         <div class="mat"></div>
         <div class="disc" id="disc">
@@ -749,132 +940,250 @@
             </div>
           </div>
         </div>
+        <!-- Realistic Tonearm -->
         <div class="tonearm" id="tonearm">
-          <svg viewBox="0 0 100 100">
-            <circle cx="88" cy="12" r="7" fill="#c9a05a" stroke="#1c140e" stroke-width="1.5"/>
-            <line x1="88" y1="12" x2="18" y2="86" stroke="#c9a05a" stroke-width="3.5" stroke-linecap="round"/>
-            <circle cx="18" cy="86" r="3.5" fill="#1c140e"/>
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="armTubeGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#D4C4B0"/>
+                <stop offset="35%" stop-color="#B8A890"/>
+                <stop offset="70%" stop-color="#A09480"/>
+                <stop offset="100%" stop-color="#8A7E6C"/>
+              </linearGradient>
+              <linearGradient id="armHighlight" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
+                <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+              </linearGradient>
+              <radialGradient id="pivotGrad">
+                <stop offset="0%" stop-color="#8A7E6C"/>
+                <stop offset="60%" stop-color="#5C5040"/>
+                <stop offset="100%" stop-color="#3A3028"/>
+              </radialGradient>
+              <radialGradient id="cwGrad">
+                <stop offset="0%" stop-color="#7A6E5C"/>
+                <stop offset="100%" stop-color="#4A4030"/>
+              </radialGradient>
+            </defs>
+            <!-- Arm rest post -->
+            <rect x="76" y="22" width="4" height="6" rx="1" fill="#4A4030"/>
+            <rect x="75" y="21" width="6" height="2" rx="1" fill="#6B5D50"/>
+            <!-- Counterweight (cylindrical, at rear) -->
+            <ellipse cx="96" cy="8" rx="5.5" ry="4" fill="url(#cwGrad)" stroke="#3A3028" stroke-width="0.4"/>
+            <ellipse cx="96" cy="7" rx="5" ry="3" fill="#8A7E6C" opacity="0.6"/>
+            <!-- Rear stub (counterweight to pivot) -->
+            <line x1="91" y1="8" x2="84" y2="11" stroke="#9A8B7A" stroke-width="2.2" stroke-linecap="round"/>
+            <!-- Pivot bearing housing -->
+            <circle cx="82" cy="12" r="7.5" fill="#3A3028" stroke="#2A2018" stroke-width="0.5"/>
+            <circle cx="82" cy="12" r="5.5" fill="url(#pivotGrad)"/>
+            <circle cx="82" cy="12" r="3" fill="#7A6E5C"/>
+            <circle cx="82" cy="12" r="1.2" fill="#A09480"/>
+            <!-- Main arm tube (gentle S-curve) -->
+            <path d="M82,12 C68,20 50,38 22,82" stroke="url(#armTubeGrad)" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+            <!-- Highlight (metallic sheen) -->
+            <path d="M81,11 C68,18 50,36 23,80" stroke="url(#armHighlight)" stroke-width="0.7" fill="none"/>
+            <!-- Finger lift (small bump near headshell) -->
+            <circle cx="28" cy="74" r="1.5" fill="#8A7E6C" stroke="#6B5D50" stroke-width="0.3"/>
+            <!-- Headshell (angled mounting plate) -->
+            <path d="M22,82 L16,90" stroke="#B8A890" stroke-width="3" stroke-linecap="round"/>
+            <!-- Headshell plate -->
+            <path d="M18,87 L11,94 L13,96 L20,89 Z" fill="#8A7E6C" stroke="#6B5D50" stroke-width="0.3"/>
+            <!-- Cartridge body -->
+            <rect x="12.5" y="92" width="5" height="3" rx="0.5" fill="#3A3028" stroke="#2A2018" stroke-width="0.3" transform="rotate(-45,15,93.5)"/>
+            <!-- Stylus cantilever -->
+            <line x1="13" y1="95" x2="11" y2="97.5" stroke="#C4B49C" stroke-width="0.4"/>
+            <!-- Stylus diamond tip -->
+            <circle cx="10.8" cy="98" r="0.6" fill="#E8DCC8"/>
           </svg>
         </div>
       </div>
-
-      <div class="meta">
-        <div class="track-title" id="trackTitle">尚未載入播放清單</div>
-        <div class="track-artist" id="trackArtist">—</div>
-      </div>
-
-      <div class="progress-row">
-        <span class="time" id="curTime">0:00</span>
-        <div class="bar" id="bar">
-          <div class="bar-fill" id="barFill"></div>
-          <div class="bar-knob" id="barKnob"></div>
-        </div>
-        <span class="time" id="durTime">0:00</span>
-      </div>
-
-      <div class="controls">
-        <button class="ctrl-btn" id="shuffleBtn" title="隨機播放">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04z"/></svg>
-        </button>
-        <button class="ctrl-btn" id="prevBtn" title="上一首">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-        </button>
-        <button class="ctrl-btn main" id="playBtn" title="播放/暫停">
-          <svg id="playIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-          <svg id="pauseIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
-        </button>
-        <button class="ctrl-btn" id="nextBtn" title="下一首">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-9.5 6L15 18V6z"/></svg>
-        </button>
-      </div>
-
-      <div class="volume-row">
-        <button class="vol-btn" id="muteBtn" title="靜音">
-          <svg id="volIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h4l5 5V5L7 10zm13.5 2A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77"/></svg>
-          <svg id="muteIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63M19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.94 8.94 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71M4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9zM12 4 9.91 6.09 12 8.18z"/></svg>
-        </button>
-        <input type="range" id="volumeSlider" class="vol-slider" min="0" max="100" value="70">
-      </div>
-
-      <div class="status-line" id="statusLine">準備就緒</div>
     </div>
 
-    <div class="rig-spacer" aria-hidden="true"></div>
+    <!-- RIGHT: Track Info Panel -->
+    <div class="track-panel">
+      <div class="track-panel-inner">
+        <div class="meta">
+          <div class="track-title" id="trackTitle">請在設定中貼上播放清單連結</div>
+          <div class="track-artist" id="trackArtist">—</div>
+        </div>
+
+        <div class="progress-row">
+          <span class="time" id="curTime">0:00</span>
+          <div class="bar" id="bar">
+            <div class="bar-fill" id="barFill"></div>
+            <div class="bar-knob" id="barKnob"></div>
+          </div>
+          <span class="time" id="durTime">0:00</span>
+        </div>
+
+        <div class="controls">
+          <button class="ctrl-btn" id="shuffleBtn" title="隨機播放">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="prevBtn" title="上一首">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button class="ctrl-btn main" id="playBtn" title="播放/暫停">
+            <svg id="playIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="pauseIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="nextBtn" title="下一首">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-9.5 6L15 18V6z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="loopBtn" title="循環模式: 關閉">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg>
+          </button>
+        </div>
+
+        <div class="volume-row">
+          <button class="vol-btn" id="muteBtn" title="靜音">
+            <svg id="volIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h4l5 5V5L7 10zm13.5 2A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77"/></svg>
+            <svg id="muteIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63M19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.94 8.94 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71M4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9zM12 4 9.91 6.09 12 8.18z"/></svg>
+          </button>
+          <input type="range" id="volumeSlider" class="vol-slider" min="0" max="100" value="70">
+        </div>
+
+        <div class="extra-controls">
+          <button class="extra-btn" id="lyricsBtn" title="歌詞 (L)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55C7.79 13 6 14.79 6 17s1.79 4 4 4 4-1.79 4-4V7h4V3z"/></svg>
+            歌詞
+          </button>
+          <button class="extra-btn" id="fsBtn" title="全螢幕視覺化 (F)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7zm-2-4h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg>
+            視覺化
+          </button>
+        </div>
+
+        <div class="status-line" id="statusLine">準備就緒</div>
+      </div>
+    </div>
 
   </div>
-
 </div>
 
+<!-- Hidden YouTube Player -->
 <div id="yt-host"><div id="yt-player"></div></div>
 
 <script>
+  /* ============================================================
+     STATE
+     ============================================================ */
   let player;
   let isReady = false;
-  let currentPlaylistId = document.getElementById('playlistInput').value.trim();
+  let currentPlaylistId = '';
   let progressTimer = null;
 
   // crate state
-  let crateItems = [];
+  let crateItems = [];   // visual order; each: { videoId, ytIndex, el, nameEl }
   let crateIndex = -1;
   let userScrolling = false;
   let userScrollTimer = null;
   let programmaticScroll = false;
   let accordionRaf = null;
 
-  const els = {
-    disc: document.getElementById('disc'),
-    tonearm: document.getElementById('tonearm'),
-    albumLabel: document.getElementById('albumLabel'),
-    albumImg: document.getElementById('albumImg'),
-    trackTitle: document.getElementById('trackTitle'),
-    trackArtist: document.getElementById('trackArtist'),
-    playBtn: document.getElementById('playBtn'),
-    playIcon: document.getElementById('playIcon'),
-    pauseIcon: document.getElementById('pauseIcon'),
-    prevBtn: document.getElementById('prevBtn'),
-    nextBtn: document.getElementById('nextBtn'),
-    bar: document.getElementById('bar'),
-    barFill: document.getElementById('barFill'),
-    barKnob: document.getElementById('barKnob'),
-    curTime: document.getElementById('curTime'),
-    durTime: document.getElementById('durTime'),
-    statusLine: document.getElementById('statusLine'),
-    playlistInput: document.getElementById('playlistInput'),
-    loadBtn: document.getElementById('loadBtn'),
-    savedLabel: document.getElementById('savedLabel'),
-    savedList: document.getElementById('savedList'),
-    crateScroll: document.getElementById('crateScroll'),
-    settingsFab: document.getElementById('settingsFab'),
-    settingsOverlay: document.getElementById('settingsOverlay'),
-    settingsClose: document.getElementById('settingsClose'),
-    shuffleBtn: document.getElementById('shuffleBtn'),
-    muteBtn: document.getElementById('muteBtn'),
-    volIcon: document.getElementById('volIcon'),
-    muteIcon: document.getElementById('muteIcon'),
-    volumeSlider: document.getElementById('volumeSlider'),
-  };
-
+  // playback modes
   let shuffleOn = false;
+  let loopMode = 'off'; // 'off' | 'one' | 'all'
   let lastVolume = 70;
 
-  // ===== settings modal =====
-  function openSettings() { els.settingsOverlay.classList.add('open'); }
-  function closeSettings() { els.settingsOverlay.classList.remove('open'); }
-  els.settingsFab.addEventListener('click', openSettings);
-  els.settingsClose.addEventListener('click', closeSettings);
-  els.settingsOverlay.addEventListener('click', (ev) => {
-    if (ev.target === els.settingsOverlay) closeSettings();
-  });
+  // lyrics
+  let lyricsOpen = false;
+  let currentLyricsData = null; // { synced: [{time,text}], plain: string }
+  let lastLyricsVideoId = '';
 
+  // fullscreen
+  let fsOpen = false;
+  let fsParticlesCreated = false;
+
+  // drag
+  let dragState = null;
+
+  /* ============================================================
+     ELEMENT REFERENCES
+     ============================================================ */
+  const els = {
+    disc:           document.getElementById('disc'),
+    tonearm:        document.getElementById('tonearm'),
+    albumLabel:     document.getElementById('albumLabel'),
+    albumImg:       document.getElementById('albumImg'),
+    trackTitle:     document.getElementById('trackTitle'),
+    trackArtist:    document.getElementById('trackArtist'),
+    playBtn:        document.getElementById('playBtn'),
+    playIcon:       document.getElementById('playIcon'),
+    pauseIcon:      document.getElementById('pauseIcon'),
+    prevBtn:        document.getElementById('prevBtn'),
+    nextBtn:        document.getElementById('nextBtn'),
+    bar:            document.getElementById('bar'),
+    barFill:        document.getElementById('barFill'),
+    barKnob:        document.getElementById('barKnob'),
+    curTime:        document.getElementById('curTime'),
+    durTime:        document.getElementById('durTime'),
+    statusLine:     document.getElementById('statusLine'),
+    playlistInput:  document.getElementById('playlistInput'),
+    loadBtn:        document.getElementById('loadBtn'),
+    savedLabel:     document.getElementById('savedLabel'),
+    savedList:      document.getElementById('savedList'),
+    crateScroll:    document.getElementById('crateScroll'),
+    settingsFab:    document.getElementById('settingsFab'),
+    settingsOverlay:document.getElementById('settingsOverlay'),
+    settingsClose:  document.getElementById('settingsClose'),
+    shuffleBtn:     document.getElementById('shuffleBtn'),
+    loopBtn:        document.getElementById('loopBtn'),
+    muteBtn:        document.getElementById('muteBtn'),
+    volIcon:        document.getElementById('volIcon'),
+    muteIcon:       document.getElementById('muteIcon'),
+    volumeSlider:   document.getElementById('volumeSlider'),
+    lyricsPanel:    document.getElementById('lyricsPanel'),
+    lyricsBody:     document.getElementById('lyricsBody'),
+    lyricsBtn:      document.getElementById('lyricsBtn'),
+    lyricsClose:    document.getElementById('lyricsClose'),
+    fsOverlay:      document.getElementById('fsOverlay'),
+    fsTitle:        document.getElementById('fsTitle'),
+    fsArtist:       document.getElementById('fsArtist'),
+    fsAlbumImg:     document.getElementById('fsAlbumImg'),
+    fsBarFill:      document.getElementById('fsBarFill'),
+    fsCurTime:      document.getElementById('fsCurTime'),
+    fsDurTime:      document.getElementById('fsDurTime'),
+    fsCloseBtn:     document.getElementById('fsCloseBtn'),
+    fsParticles:    document.getElementById('fsParticles'),
+    fsBtn:          document.getElementById('fsBtn'),
+    toastContainer: document.getElementById('toastContainer'),
+    kbdHintBtn:     document.getElementById('kbdHintBtn'),
+    kbdOverlay:     document.getElementById('kbdOverlay'),
+  };
+
+  /* ============================================================
+     HELPERS
+     ============================================================ */
   function fmtTime(sec) {
     if (!isFinite(sec) || sec < 0) sec = 0;
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60);
     return m + ':' + String(s).padStart(2, '0');
   }
-
   function setStatus(msg) { els.statusLine.textContent = msg; }
 
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    els.toastContainer.appendChild(t);
+    setTimeout(() => t.remove(), 2000);
+  }
+
+  /* ============================================================
+     SETTINGS MODAL
+     ============================================================ */
+  function openSettings() { els.settingsOverlay.classList.add('open'); }
+  function closeSettings() { els.settingsOverlay.classList.remove('open'); }
+  els.settingsFab.addEventListener('click', openSettings);
+  els.settingsClose.addEventListener('click', closeSettings);
+  els.settingsOverlay.addEventListener('click', ev => {
+    if (ev.target === els.settingsOverlay) closeSettings();
+  });
+
+  /* ============================================================
+     YOUTUBE API
+     ============================================================ */
   function loadYouTubeAPI() {
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
@@ -882,37 +1191,47 @@
   }
 
   window.onYouTubeIframeAPIReady = function () {
-    player = new YT.Player('yt-player', {
-      height: '1',
-      width: '1',
-      playerVars: {
-        listType: 'playlist',
-        list: currentPlaylistId,
-        playsinline: 1,
-      },
+    // If no playlist ID yet, create the player without a list
+    const opts = {
+      height: '1', width: '1',
+      playerVars: { playsinline: 1 },
       events: {
         onReady: onPlayerReady,
         onStateChange: onPlayerStateChange,
         onError: onPlayerError,
       }
-    });
+    };
+    if (currentPlaylistId) {
+      opts.playerVars.listType = 'playlist';
+      opts.playerVars.list = currentPlaylistId;
+    }
+    player = new YT.Player('yt-player', opts);
   };
 
   function onPlayerReady() {
     isReady = true;
-    setStatus('播放清單已載入,按下播放鍵開始');
+    if (currentPlaylistId) {
+      setStatus('播放清單已載入，按下播放鍵開始');
+    } else {
+      setStatus('請在設定中貼上播放清單連結');
+    }
     player.setVolume(parseInt(els.volumeSlider.value, 10));
     updateVolumeUI(parseInt(els.volumeSlider.value, 10), false);
-    setTimeout(buildCrateFromPlayer, 600);
+    if (currentPlaylistId) setTimeout(buildCrateFromPlayer, 600);
   }
 
   function onPlayerError(e) {
-    const codes = {2:'影片 ID 無效',5:'無法在此播放器播放',100:'找不到影片或清單(可能為私人)',101:'上傳者不允許嵌入播放',150:'上傳者不允許嵌入播放'};
+    const codes = {
+      2: '影片 ID 無效', 5: '無法在此播放器播放',
+      100: '找不到影片或清單（可能為私人）',
+      101: '上傳者不允許嵌入播放', 150: '上傳者不允許嵌入播放'
+    };
     setStatus('錯誤: ' + (codes[e.data] || e.data));
   }
 
   function onPlayerStateChange(e) {
-    if (e.data === YT.PlayerState.PLAYING) {
+    const S = YT.PlayerState;
+    if (e.data === S.PLAYING) {
       els.disc.classList.add('playing');
       els.tonearm.classList.add('down');
       els.playIcon.style.display = 'none';
@@ -920,39 +1239,109 @@
       updateTrackMeta();
       startProgressLoop();
       setStatus('播放中');
-      if (crateItems.length === 0) buildCrateFromPlayer();
+      if (!crateItems.length) buildCrateFromPlayer();
       syncCrateToPlayer();
-    } else if (e.data === YT.PlayerState.PAUSED) {
+      if (fsOpen) els.fsOverlay.classList.add('playing');
+    } else if (e.data === S.PAUSED) {
       els.disc.classList.remove('playing');
       els.tonearm.classList.remove('down');
       els.playIcon.style.display = '';
       els.pauseIcon.style.display = 'none';
       stopProgressLoop();
       setStatus('已暫停');
-    } else if (e.data === YT.PlayerState.ENDED) {
-      setStatus('這首結束,換下一首');
-    } else if (e.data === YT.PlayerState.CUED) {
+      if (fsOpen) els.fsOverlay.classList.remove('playing');
+    } else if (e.data === S.ENDED) {
+      handleTrackEnd();
+    } else if (e.data === S.CUED) {
       updateTrackMeta();
       setStatus('已就緒');
-      if (crateItems.length === 0) buildCrateFromPlayer();
+      if (!crateItems.length) buildCrateFromPlayer();
       syncCrateToPlayer();
-    } else if (e.data === YT.PlayerState.BUFFERING) {
+    } else if (e.data === S.BUFFERING) {
       setStatus('緩衝中…');
     }
   }
 
+  /* ============================================================
+     LOOP LOGIC – handle track end
+     ============================================================ */
+  function handleTrackEnd() {
+    if (loopMode === 'one') {
+      // replay same track
+      player.seekTo(0, true);
+      player.playVideo();
+      setStatus('單曲循環');
+    } else if (loopMode === 'all') {
+      goNext();
+      setStatus('下一首（清單循環）');
+    } else {
+      // off – YouTube's own behaviour (auto-advance, stop at end)
+      setStatus('這首結束');
+      // still try to advance
+      goNext();
+    }
+  }
+
+  /* ============================================================
+     TRACK META
+     ============================================================ */
   function updateTrackMeta() {
     try {
       const data = player.getVideoData();
       els.trackTitle.textContent = data.title || '未知曲目';
       els.trackArtist.textContent = data.author || '';
       if (data.video_id) {
-        els.albumImg.src = `https://img.youtube.com/vi/${data.video_id}/hqdefault.jpg`;
+        els.albumImg.src = 'https://img.youtube.com/vi/' + data.video_id + '/hqdefault.jpg';
       }
-      refineSavedPlaylistName(data.author);
+      // fullscreen sync
+      els.fsTitle.textContent = data.title || '—';
+      els.fsArtist.textContent = data.author || '';
+      if (data.video_id) {
+        els.fsAlbumImg.src = 'https://img.youtube.com/vi/' + data.video_id + '/hqdefault.jpg';
+      }
+      // fetch playlist name via oEmbed if needed
+      fetchPlaylistName();
+      // fetch lyrics
+      if (data.video_id !== lastLyricsVideoId) {
+        lastLyricsVideoId = data.video_id;
+        fetchLyrics(data.title || '', data.author || '');
+      }
     } catch (err) {}
   }
 
+  /* ============================================================
+     PLAYLIST NAME – use oEmbed API for the REAL title
+     ============================================================ */
+  function fetchPlaylistName() {
+    if (!currentPlaylistId) return;
+    const list = loadSavedPlaylists();
+    const entry = list.find(p => p.id === currentPlaylistId);
+    // only fetch if name is still the raw ID or empty
+    if (entry && entry.name && entry.name !== entry.id) return;
+
+    const url = 'https://www.youtube.com/oembed?url=https://www.youtube.com/playlist?list='
+      + encodeURIComponent(currentPlaylistId) + '&format=json';
+    fetch(url)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data && data.title) {
+          upsertSavedPlaylist(currentPlaylistId, data.title);
+        }
+      })
+      .catch(() => {
+        // fallback: try using video author
+        try {
+          const vd = player.getVideoData();
+          if (vd && vd.author) {
+            upsertSavedPlaylist(currentPlaylistId, vd.author + ' 的播放清單');
+          }
+        } catch (e) {}
+      });
+  }
+
+  /* ============================================================
+     PROGRESS LOOP
+     ============================================================ */
   function startProgressLoop() {
     stopProgressLoop();
     progressTimer = setInterval(() => {
@@ -964,92 +1353,118 @@
       els.barKnob.style.left = pct + '%';
       els.curTime.textContent = fmtTime(cur);
       els.durTime.textContent = fmtTime(dur);
-    }, 400);
+      // fullscreen progress
+      els.fsBarFill.style.width = pct + '%';
+      els.fsCurTime.textContent = fmtTime(cur);
+      els.fsDurTime.textContent = fmtTime(dur);
+      // synced lyrics highlight
+      if (lyricsOpen && currentLyricsData && currentLyricsData.synced) {
+        highlightLyricLine(cur);
+      }
+    }, 350);
   }
   function stopProgressLoop() {
     if (progressTimer) clearInterval(progressTimer);
     progressTimer = null;
   }
 
-  els.playBtn.addEventListener('click', () => {
+  /* ============================================================
+     PLAYBACK CONTROLS
+     ============================================================ */
+  els.playBtn.addEventListener('click', togglePlay);
+  function togglePlay() {
     if (!isReady) return;
     const state = player.getPlayerState();
     if (state === YT.PlayerState.PLAYING) player.pauseVideo();
     else player.playVideo();
-  });
-
-  // ----- next / prev -----
-  // Previously these called player.nextVideo()/previousVideo() directly.
-  // Those native methods rely on the iframe's own internal playlist
-  // pointer, which can fall out of sync with what's actually on screen
-  // (e.g. right after a manual crate click, or before the playlist has
-  // fully settled) - when that happens the button silently does nothing
-  // or jumps somewhere unexpected. Driving navigation off our own
-  // crateItems/index instead of the iframe's internal state removes that
-  // whole class of mismatch, and lets us wrap around at the ends and
-  // support shuffle from the same code path.
-  function getCurrentCrateIndex() {
-    if (!isReady) return -1;
-    try {
-      const idx = player.getPlaylistIndex();
-      return idx >= 0 ? idx : crateIndex;
-    } catch (err) {
-      return crateIndex;
-    }
   }
 
-  function playCrateIndex(idx) {
+  function getVisualIndex() {
+    if (!isReady || !crateItems.length) return -1;
+    try {
+      const ytIdx = player.getPlaylistIndex();
+      return crateItems.findIndex(c => c.ytIndex === ytIdx);
+    } catch (e) { return -1; }
+  }
+
+  function playCrateByVisualIndex(vi) {
     if (!isReady || !crateItems.length) return;
-    const wrapped = ((idx % crateItems.length) + crateItems.length) % crateItems.length;
-    player.playVideoAt(wrapped);
+    const wrapped = ((vi % crateItems.length) + crateItems.length) % crateItems.length;
+    player.playVideoAt(crateItems[wrapped].ytIndex);
   }
 
   function goNext() {
     if (!isReady || !crateItems.length) return;
-    const cur = getCurrentCrateIndex();
+    const cur = getVisualIndex();
     if (shuffleOn && crateItems.length > 1) {
       let idx;
       do { idx = Math.floor(Math.random() * crateItems.length); } while (idx === cur);
-      playCrateIndex(idx);
+      playCrateByVisualIndex(idx);
     } else {
-      playCrateIndex(cur + 1);
+      playCrateByVisualIndex(cur + 1);
     }
   }
 
   function goPrev() {
     if (!isReady || !crateItems.length) return;
-    const cur = getCurrentCrateIndex();
+    const cur = getVisualIndex();
     if (shuffleOn && crateItems.length > 1) {
       let idx;
       do { idx = Math.floor(Math.random() * crateItems.length); } while (idx === cur);
-      playCrateIndex(idx);
+      playCrateByVisualIndex(idx);
     } else {
-      playCrateIndex(cur - 1);
+      playCrateByVisualIndex(cur - 1);
     }
   }
 
   els.nextBtn.addEventListener('click', goNext);
   els.prevBtn.addEventListener('click', goPrev);
 
-  // ----- shuffle -----
-  els.shuffleBtn.addEventListener('click', () => {
+  /* ============================================================
+     SHUFFLE
+     ============================================================ */
+  els.shuffleBtn.addEventListener('click', toggleShuffle);
+  function toggleShuffle() {
     shuffleOn = !shuffleOn;
     els.shuffleBtn.classList.toggle('active', shuffleOn);
-    setStatus(shuffleOn ? '隨機播放已開啟' : '隨機播放已關閉');
-  });
+    showToast(shuffleOn ? '🔀 隨機播放已開啟' : '🔀 隨機播放已關閉');
+  }
 
-  // ----- volume -----
+  /* ============================================================
+     LOOP MODE
+     ============================================================ */
+  const loopStates = ['off', 'all', 'one'];
+  const loopLabels = { off: '循環: 關閉', all: '🔁 清單循環', one: '🔂 單曲循環' };
+  const loopSvgs = {
+    off: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg>',
+    all: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg>',
+    one: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2zM13 15V9h-1l-2 1v1h1.5v4z"/></svg>',
+  };
+
+  els.loopBtn.addEventListener('click', cycleLoop);
+  function cycleLoop() {
+    const idx = loopStates.indexOf(loopMode);
+    loopMode = loopStates[(idx + 1) % loopStates.length];
+    els.loopBtn.innerHTML = loopSvgs[loopMode];
+    els.loopBtn.title = loopLabels[loopMode];
+    els.loopBtn.classList.toggle('active', loopMode !== 'off');
+    showToast(loopLabels[loopMode]);
+  }
+
+  /* ============================================================
+     VOLUME
+     ============================================================ */
   function updateVolumeUI(vol, muted) {
     els.volumeSlider.value = vol;
     const pct = Math.max(0, Math.min(100, vol));
     els.volumeSlider.style.background =
-      `linear-gradient(90deg, var(--brass), var(--brass-bright) ${pct}%, rgba(255,255,255,0.12) ${pct}%)`;
+      'linear-gradient(90deg, var(--brass), var(--brass-bright) ' + pct + '%, rgba(255,255,255,0.1) ' + pct + '%)';
     const showMuted = muted || vol === 0;
     els.volIcon.style.display = showMuted ? 'none' : '';
     els.muteIcon.style.display = showMuted ? '' : 'none';
   }
 
-  els.volumeSlider.addEventListener('input', (ev) => {
+  els.volumeSlider.addEventListener('input', ev => {
     const vol = parseInt(ev.target.value, 10);
     lastVolume = vol > 0 ? vol : lastVolume;
     updateVolumeUI(vol, vol === 0);
@@ -1059,7 +1474,8 @@
     }
   });
 
-  els.muteBtn.addEventListener('click', () => {
+  els.muteBtn.addEventListener('click', toggleMute);
+  function toggleMute() {
     if (!isReady) return;
     const currentlyMuted = player.isMuted();
     if (currentlyMuted) {
@@ -1071,9 +1487,12 @@
       player.mute();
       updateVolumeUI(0, true);
     }
-  });
+  }
 
-  els.bar.addEventListener('click', (ev) => {
+  /* ============================================================
+     SEEK BAR
+     ============================================================ */
+  els.bar.addEventListener('click', ev => {
     if (!isReady) return;
     const rect = els.bar.getBoundingClientRect();
     const pct = (ev.clientX - rect.left) / rect.width;
@@ -1081,10 +1500,9 @@
     player.seekTo(dur * pct, true);
   });
 
-  // ===== playlist ID parsing =====
-  // Accepts a bare ID, or a full YouTube URL of any common shape
-  // (playlist?list=..., watch?v=...&list=..., youtu.be/...&list=...)
-  // and always returns just the bare playlist ID.
+  /* ============================================================
+     PLAYLIST ID PARSING
+     ============================================================ */
   function extractPlaylistId(raw) {
     const val = (raw || '').trim();
     if (!val) return '';
@@ -1092,59 +1510,46 @@
       const url = new URL(val);
       const listParam = url.searchParams.get('list');
       if (listParam) return listParam;
-    } catch (err) {
-      // not a parseable absolute URL - fall through to regex/plain-ID handling
-    }
+    } catch (err) {}
     const m = val.match(/(?:^|[?&])list=([^&#\s]+)/);
     if (m) return decodeURIComponent(m[1]);
     return val.replace(/["'\s]/g, '');
   }
 
-  // ===== saved playlists (localStorage) =====
-  const SAVED_PLAYLISTS_KEY = 'ytMusicPlayer.savedPlaylists';
-  const SAVED_PLAYLISTS_MAX = 10;
+  /* ============================================================
+     SAVED PLAYLISTS (localStorage)
+     ============================================================ */
+  const SAVED_KEY = 'ytMusicPlayer.savedPlaylists';
+  const SAVED_MAX = 10;
 
   function loadSavedPlaylists() {
     try {
-      const raw = localStorage.getItem(SAVED_PLAYLISTS_KEY);
+      const raw = localStorage.getItem(SAVED_KEY);
       const list = raw ? JSON.parse(raw) : [];
       return Array.isArray(list) ? list : [];
-    } catch (err) { return []; }
+    } catch (e) { return []; }
   }
 
   function writeSavedPlaylists(list) {
-    try { localStorage.setItem(SAVED_PLAYLISTS_KEY, JSON.stringify(list)); } catch (err) {}
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify(list)); } catch (e) {}
   }
 
   function upsertSavedPlaylist(id, name) {
     if (!id) return;
     const list = loadSavedPlaylists();
-    const existing = list.find(function (p) { return p.id === id; });
+    const existing = list.find(p => p.id === id);
     if (existing) {
       if (name) existing.name = name;
       existing.savedAt = Date.now();
     } else {
-      list.unshift({ id: id, name: name || id, savedAt: Date.now() });
+      list.unshift({ id, name: name || id, savedAt: Date.now() });
     }
-    writeSavedPlaylists(list.slice(0, SAVED_PLAYLISTS_MAX));
+    writeSavedPlaylists(list.slice(0, SAVED_MAX));
     renderSavedPlaylists();
   }
 
   function removeSavedPlaylist(id) {
-    writeSavedPlaylists(loadSavedPlaylists().filter(function (p) { return p.id !== id; }));
-    renderSavedPlaylists();
-  }
-
-  // once we learn who the tracks are by (e.g. a "Topic" channel name),
-  // upgrade a playlist's saved label away from its raw ID so the list is
-  // actually readable at a glance.
-  function refineSavedPlaylistName(author) {
-    if (!author || !currentPlaylistId) return;
-    const list = loadSavedPlaylists();
-    const entry = list.find(function (p) { return p.id === currentPlaylistId; });
-    if (!entry || (entry.name && entry.name !== entry.id)) return;
-    entry.name = author + ' 的播放清單';
-    writeSavedPlaylists(list);
+    writeSavedPlaylists(loadSavedPlaylists().filter(p => p.id !== id));
     renderSavedPlaylists();
   }
 
@@ -1152,7 +1557,7 @@
     const list = loadSavedPlaylists();
     els.savedLabel.style.display = list.length ? '' : 'none';
     els.savedList.innerHTML = '';
-    list.forEach(function (p) {
+    list.forEach(p => {
       const row = document.createElement('div');
       row.className = 'saved-item' + (p.id === currentPlaylistId ? ' active' : '');
 
@@ -1160,13 +1565,13 @@
       nameEl.className = 'saved-name';
       nameEl.textContent = p.name;
       nameEl.title = p.id;
-      nameEl.addEventListener('click', function () { applyPlaylist(p.id); });
+      nameEl.addEventListener('click', () => applyPlaylist(p.id));
 
       const removeEl = document.createElement('button');
       removeEl.className = 'saved-remove';
       removeEl.title = '移除這個清單';
       removeEl.textContent = '×';
-      removeEl.addEventListener('click', function (ev) {
+      removeEl.addEventListener('click', ev => {
         ev.stopPropagation();
         removeSavedPlaylist(p.id);
       });
@@ -1184,30 +1589,49 @@
     stopProgressLoop();
     els.disc.classList.remove('playing');
     els.tonearm.classList.remove('down');
+    els.playIcon.style.display = '';
+    els.pauseIcon.style.display = 'none';
     els.trackTitle.textContent = '載入中…';
     els.trackArtist.textContent = '—';
     crateItems = [];
     crateIndex = -1;
     clearCrateDom();
     if (isReady) {
-      player.loadPlaylist({ list: currentPlaylistId });
+      player.loadPlaylist({ list: currentPlaylistId, listType: 'playlist' });
     }
     upsertSavedPlaylist(id);
     closeSettings();
+    showToast('📀 載入播放清單');
   }
 
   els.loadBtn.addEventListener('click', () => {
     const id = extractPlaylistId(els.playlistInput.value);
-    if (!id) return;
+    if (!id) { showToast('請輸入有效的播放清單連結或 ID'); return; }
     applyPlaylist(id);
   });
 
-  // seed the saved list with whatever playlist is loaded on first visit,
-  // and render whatever was already saved from previous visits
-  upsertSavedPlaylist(currentPlaylistId);
+  // also allow pressing Enter in the input
+  els.playlistInput.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      els.loadBtn.click();
+    }
+  });
 
-  // ===== record crate (playlist rail) =====
+  // load previously-saved default playlist from localStorage on startup
+  (function initPlaylist() {
+    const saved = loadSavedPlaylists();
+    if (saved.length > 0) {
+      // use the most recently saved playlist
+      currentPlaylistId = saved[0].id;
+      els.playlistInput.value = saved[0].id;
+    }
+    renderSavedPlaylists();
+  })();
 
+  /* ============================================================
+     RECORD CRATE (PLAYLIST RAIL)
+     ============================================================ */
   function clearCrateDom() {
     document.querySelectorAll('.record-item').forEach(n => n.remove());
   }
@@ -1215,7 +1639,7 @@
   function buildCrateFromPlayer() {
     if (!isReady) return;
     let ids = [];
-    try { ids = player.getPlaylist() || []; } catch (err) { ids = []; }
+    try { ids = player.getPlaylist() || []; } catch (e) { ids = []; }
     if (!ids.length) return;
     if (crateItems.length === ids.length) return;
 
@@ -1235,41 +1659,52 @@
         if (isReady) player.playVideoAt(idx);
       });
       els.crateScroll.insertBefore(item, pads[1]);
-      crateItems.push({ videoId, el: item, nameEl: item.querySelector('.mini-name') });
+      crateItems.push({
+        videoId,
+        ytIndex: idx,
+        el: item,
+        nameEl: item.querySelector('.mini-name')
+      });
+      // setup drag
+      initDragForItem(item, crateItems.length - 1);
     });
 
+    // fetch real titles via oEmbed
     ids.forEach((videoId, idx) => {
       fetch('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=' + videoId + '&format=json')
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (data) {
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
           if (data && data.title && crateItems[idx]) {
             crateItems[idx].nameEl.textContent = data.title;
           }
         })
-        .catch(function () {});
+        .catch(() => {});
     });
 
-    els.crateScroll.addEventListener('touchstart', function () { userScrolling = true; });
-    els.crateScroll.addEventListener('wheel', function () { userScrolling = true; });
-    els.crateScroll.addEventListener('scroll', function () {
-      requestAccordionUpdate();
-      if (programmaticScroll) return;
-      userScrolling = true;
-      clearTimeout(userScrollTimer);
-      userScrollTimer = setTimeout(function () {
-        userScrolling = false;
-        selectNearestCrateItem();
-      }, 220);
-    });
-
+    setupCrateScrollListeners();
     updateCratePadding();
     requestAccordionUpdate();
     syncCrateToPlayer();
   }
 
-  // Sizes the top/bottom spacer pads so the first and last rows can
-  // still reach the crate's vertical center line - required for
-  // center-based scroll-snap (see .record-item's scroll-snap-align).
+  let crateScrollBound = false;
+  function setupCrateScrollListeners() {
+    if (crateScrollBound) return;
+    crateScrollBound = true;
+    els.crateScroll.addEventListener('touchstart', () => { userScrolling = true; });
+    els.crateScroll.addEventListener('wheel', () => { userScrolling = true; });
+    els.crateScroll.addEventListener('scroll', () => {
+      requestAccordionUpdate();
+      if (programmaticScroll) return;
+      userScrolling = true;
+      clearTimeout(userScrollTimer);
+      userScrollTimer = setTimeout(() => {
+        userScrolling = false;
+        selectNearestCrateItem();
+      }, 220);
+    });
+  }
+
   function updateCratePadding() {
     const pads = els.crateScroll.querySelectorAll('.crate-pad');
     if (pads.length < 2 || !crateItems.length) return;
@@ -1282,26 +1717,18 @@
     pads[pads.length - 1].style.height = padSize + 'px';
   }
 
-  // Scroll-driven accordion: on every scroll tick, scale/fade each row
-  // by how far it sits from the crate's vertical center - the centered
-  // row expands toward full size and opacity while rows further out
-  // shrink and dim, giving the queue a concertina-like "breathing"
-  // motion as it's scrolled (rather than a flat list where every row
-  // looks the same). rAF-throttled so rapid scroll/touch events don't
-  // flood layout reads.
   function updateAccordionScale() {
     accordionRaf = null;
     if (!crateItems.length) return;
     const containerRect = els.crateScroll.getBoundingClientRect();
     const centerY = containerRect.top + containerRect.height / 2;
     const halfH = containerRect.height / 2 || 1;
-
-    crateItems.forEach(function (entry) {
+    crateItems.forEach(entry => {
       const r = entry.el.getBoundingClientRect();
       const itemCenter = r.top + r.height / 2;
       const norm = Math.min(Math.abs(itemCenter - centerY) / halfH, 1);
-      const scale = 1.12 - norm * 0.34;
-      const opacity = 1 - norm * 0.62;
+      const scale = 1.1 - norm * 0.3;
+      const opacity = 1 - norm * 0.6;
       entry.el.style.transform = 'scale(' + scale.toFixed(3) + ')';
       entry.el.style.opacity = opacity.toFixed(3);
     });
@@ -1315,54 +1742,400 @@
     if (!crateItems.length) return;
     const containerRect = els.crateScroll.getBoundingClientRect();
     const originPos = containerRect.top + containerRect.height / 2;
-
-    let nearestIdx = -1;
-    let nearestDist = Infinity;
-    crateItems.forEach(function (entry, idx) {
+    let nearestIdx = -1, nearestDist = Infinity;
+    crateItems.forEach((entry, idx) => {
       const r = entry.el.getBoundingClientRect();
       const itemCenter = r.top + r.height / 2;
       const dist = Math.abs(itemCenter - originPos);
       if (dist < nearestDist) { nearestDist = dist; nearestIdx = idx; }
     });
-
     if (nearestIdx !== -1 && isReady) {
-      const currentIdx = player.getPlaylistIndex();
-      if (nearestIdx !== currentIdx) {
-        player.playVideoAt(nearestIdx);
-      }
+      const ytIdx = crateItems[nearestIdx].ytIndex;
+      try {
+        if (ytIdx !== player.getPlaylistIndex()) {
+          player.playVideoAt(ytIdx);
+        }
+      } catch (e) {}
     }
   }
 
   function syncCrateToPlayer() {
-    if (!isReady || crateItems.length === 0) return;
-    let idx;
-    try { idx = player.getPlaylistIndex(); } catch (err) { idx = -1; }
-    if (idx === -1 || idx === crateIndex) return;
-    crateIndex = idx;
+    if (!isReady || !crateItems.length) return;
+    let ytIdx;
+    try { ytIdx = player.getPlaylistIndex(); } catch (e) { ytIdx = -1; }
+    if (ytIdx === -1) return;
 
-    crateItems.forEach(function (entry, i) {
-      entry.el.classList.toggle('active', i === idx);
+    const visualIdx = crateItems.findIndex(c => c.ytIndex === ytIdx);
+    if (visualIdx === -1 || visualIdx === crateIndex) return;
+    crateIndex = visualIdx;
+
+    crateItems.forEach((entry, i) => {
+      entry.el.classList.toggle('active', i === visualIdx);
     });
 
     if (!userScrolling) {
       programmaticScroll = true;
-      crateItems[idx].el.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'nearest',
+      crateItems[visualIdx].el.scrollIntoView({
+        behavior: 'smooth', block: 'center', inline: 'nearest',
       });
-      setTimeout(function () {
+      setTimeout(() => {
         programmaticScroll = false;
         requestAccordionUpdate();
       }, 500);
     }
   }
 
-  window.addEventListener('resize', function () {
+  /* ============================================================
+     DRAG TO REORDER
+     ============================================================ */
+  function initDragForItem(itemEl, initialIdx) {
+    itemEl.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      // ignore clicks on interactive children
+      if (e.target.closest('button')) return;
+
+      const rect = itemEl.getBoundingClientRect();
+      dragState = {
+        el: itemEl,
+        startY: e.clientY,
+        startX: e.clientX,
+        offsetY: e.clientY - rect.top,
+        clone: null,
+        moved: false,
+      };
+
+      const onMove = ev => {
+        if (!dragState) return;
+        const dy = Math.abs(ev.clientY - dragState.startY);
+        const dx = Math.abs(ev.clientX - dragState.startX);
+
+        // only start drag after threshold
+        if (!dragState.moved && dy < 8 && dx < 8) return;
+
+        if (!dragState.moved) {
+          dragState.moved = true;
+          // create ghost
+          const clone = itemEl.cloneNode(true);
+          clone.className = 'record-item drag-ghost';
+          clone.style.width = rect.width + 'px';
+          clone.style.position = 'fixed';
+          clone.style.left = rect.left + 'px';
+          clone.style.top = (ev.clientY - dragState.offsetY) + 'px';
+          document.body.appendChild(clone);
+          dragState.clone = clone;
+          itemEl.classList.add('dragging');
+        }
+
+        dragState.clone.style.top = (ev.clientY - dragState.offsetY) + 'px';
+
+        // find current visual index of dragged element
+        const curVisIdx = crateItems.findIndex(c => c.el === dragState.el);
+        if (curVisIdx === -1) return;
+
+        // check if we should swap with a neighbor
+        for (let i = 0; i < crateItems.length; i++) {
+          if (i === curVisIdx) continue;
+          const r = crateItems[i].el.getBoundingClientRect();
+          const mid = r.top + r.height / 2;
+
+          if (i < curVisIdx && ev.clientY < mid) {
+            // move up
+            els.crateScroll.insertBefore(dragState.el, crateItems[i].el);
+            const [removed] = crateItems.splice(curVisIdx, 1);
+            crateItems.splice(i, 0, removed);
+            requestAccordionUpdate();
+            break;
+          } else if (i > curVisIdx && ev.clientY > mid) {
+            // move down
+            const nextSibling = crateItems[i].el.nextSibling;
+            els.crateScroll.insertBefore(dragState.el, nextSibling);
+            const [removed] = crateItems.splice(curVisIdx, 1);
+            crateItems.splice(i, 0, removed);
+            requestAccordionUpdate();
+            break;
+          }
+        }
+      };
+
+      const onUp = () => {
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        if (dragState) {
+          dragState.el.classList.remove('dragging');
+          if (dragState.clone) dragState.clone.remove();
+          if (dragState.moved) {
+            showToast('📋 播放順序已更新');
+          }
+        }
+        dragState = null;
+      };
+
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    });
+  }
+
+  /* ============================================================
+     LYRICS – using lrclib.net API
+     ============================================================ */
+  function parseSongInfo(videoTitle) {
+    let artist = '', title = '';
+    // "Artist - Title (extras)"
+    const dashMatch = videoTitle.match(/^(.+?)\s*[-–—]\s*(.+?)(?:\s*[\(\[（【｜|].*)?$/);
+    if (dashMatch) {
+      artist = dashMatch[1].trim();
+      title = dashMatch[2].trim();
+    } else {
+      title = videoTitle.replace(/[\(\[（【].*?[\)\]）】]/g, '').trim();
+    }
+    // clean up common suffixes
+    title = title.replace(/\s*(Official\s*(Music\s*)?Video|MV|Lyric\s*Video|Audio|官方|歌詞版|完整版).*$/i, '').trim();
+    return { artist, title: title || videoTitle };
+  }
+
+  function parseLRC(lrcText) {
+    const lines = lrcText.split('\n');
+    const result = [];
+    lines.forEach(line => {
+      const match = line.match(/^\[(\d{2}):(\d{2})\.(\d{2,3})\]\s*(.*)/);
+      if (match) {
+        const time = parseInt(match[1]) * 60 + parseInt(match[2]) + parseInt(match[3]) / (match[3].length === 3 ? 1000 : 100);
+        const text = match[4].trim();
+        if (text) result.push({ time, text });
+      }
+    });
+    return result.sort((a, b) => a.time - b.time);
+  }
+
+  async function fetchLyrics(videoTitle, author) {
+    if (!videoTitle) return;
+    const info = parseSongInfo(videoTitle);
+    els.lyricsBody.innerHTML = '<p class="lyrics-placeholder">搜尋歌詞中…</p>';
+
+    try {
+      // try search with parsed info
+      let query = info.title;
+      if (info.artist) query = info.artist + ' ' + info.title;
+      const res = await fetch('https://lrclib.net/api/search?q=' + encodeURIComponent(query));
+      if (!res.ok) throw new Error('API error');
+      const results = await res.json();
+
+      if (!results.length) {
+        // try broader search with just the title
+        const res2 = await fetch('https://lrclib.net/api/search?q=' + encodeURIComponent(info.title));
+        if (res2.ok) {
+          const r2 = await res2.json();
+          if (r2.length) {
+            displayLyrics(r2[0]);
+            return;
+          }
+        }
+        els.lyricsBody.innerHTML = '<p class="lyrics-placeholder">未找到歌詞</p>';
+        currentLyricsData = null;
+        return;
+      }
+
+      // prefer one with synced lyrics
+      const withSynced = results.find(r => r.syncedLyrics);
+      displayLyrics(withSynced || results[0]);
+    } catch (err) {
+      els.lyricsBody.innerHTML = '<p class="lyrics-placeholder">搜尋歌詞失敗</p>';
+      currentLyricsData = null;
+    }
+  }
+
+  function displayLyrics(data) {
+    els.lyricsBody.innerHTML = '';
+    currentLyricsData = null;
+
+    if (data.syncedLyrics) {
+      const parsed = parseLRC(data.syncedLyrics);
+      currentLyricsData = { synced: parsed };
+      parsed.forEach((line, idx) => {
+        const el = document.createElement('div');
+        el.className = 'lyrics-line';
+        el.textContent = line.text;
+        el.dataset.idx = idx;
+        els.lyricsBody.appendChild(el);
+      });
+    } else if (data.plainLyrics) {
+      currentLyricsData = { plain: data.plainLyrics };
+      data.plainLyrics.split('\n').forEach(line => {
+        const el = document.createElement('div');
+        el.className = 'lyrics-line';
+        el.textContent = line || '\u00A0';
+        els.lyricsBody.appendChild(el);
+      });
+    } else {
+      els.lyricsBody.innerHTML = '<p class="lyrics-placeholder">未找到歌詞</p>';
+    }
+  }
+
+  function highlightLyricLine(currentTime) {
+    if (!currentLyricsData || !currentLyricsData.synced) return;
+    const lines = currentLyricsData.synced;
+    let activeIdx = -1;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (currentTime >= lines[i].time) { activeIdx = i; break; }
+    }
+    const lineEls = els.lyricsBody.querySelectorAll('.lyrics-line');
+    lineEls.forEach((el, i) => {
+      el.classList.toggle('active', i === activeIdx);
+      el.classList.toggle('past', i < activeIdx);
+    });
+    // auto-scroll to active line
+    if (activeIdx >= 0 && lineEls[activeIdx]) {
+      lineEls[activeIdx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  // lyrics panel toggle
+  els.lyricsBtn.addEventListener('click', toggleLyrics);
+  els.lyricsClose.addEventListener('click', toggleLyrics);
+  function toggleLyrics() {
+    lyricsOpen = !lyricsOpen;
+    els.lyricsPanel.classList.toggle('open', lyricsOpen);
+    els.lyricsBtn.classList.toggle('active', lyricsOpen);
+  }
+
+  /* ============================================================
+     FULLSCREEN VISUALIZATION
+     ============================================================ */
+  els.fsBtn.addEventListener('click', toggleFullscreen);
+  els.fsCloseBtn.addEventListener('click', toggleFullscreen);
+  function toggleFullscreen() {
+    fsOpen = !fsOpen;
+    els.fsOverlay.classList.toggle('open', fsOpen);
+    els.fsBtn.classList.toggle('active', fsOpen);
+
+    if (fsOpen) {
+      // sync playing state
+      if (isReady && player.getPlayerState() === YT.PlayerState.PLAYING) {
+        els.fsOverlay.classList.add('playing');
+      }
+      // sync track info
+      try {
+        const data = player.getVideoData();
+        els.fsTitle.textContent = data.title || '—';
+        els.fsArtist.textContent = data.author || '';
+        if (data.video_id) {
+          els.fsAlbumImg.src = 'https://img.youtube.com/vi/' + data.video_id + '/hqdefault.jpg';
+        }
+      } catch (e) {}
+      // create particles
+      if (!fsParticlesCreated) {
+        createFsParticles();
+        fsParticlesCreated = true;
+      }
+    } else {
+      els.fsOverlay.classList.remove('playing');
+    }
+  }
+
+  function createFsParticles() {
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      p.className = 'fs-particle';
+      const size = 2 + Math.random() * 5;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.bottom = '-5%';
+      p.style.animationDuration = (8 + Math.random() * 12) + 's';
+      p.style.animationDelay = (Math.random() * 15) + 's';
+      p.style.opacity = 0.1 + Math.random() * 0.3;
+      els.fsParticles.appendChild(p);
+    }
+  }
+
+  /* ============================================================
+     KEYBOARD SHORTCUTS
+     ============================================================ */
+  // keyboard hint overlay
+  els.kbdHintBtn.addEventListener('click', () => {
+    els.kbdOverlay.classList.toggle('open');
+  });
+  els.kbdOverlay.addEventListener('click', ev => {
+    if (ev.target === els.kbdOverlay) els.kbdOverlay.classList.remove('open');
+  });
+
+  document.addEventListener('keydown', ev => {
+    // don't capture when typing in inputs
+    if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA') return;
+
+    switch (ev.key) {
+      case ' ':
+        ev.preventDefault();
+        togglePlay();
+        break;
+      case 'ArrowRight':
+        ev.preventDefault();
+        goNext();
+        showToast('⏭ 下一首');
+        break;
+      case 'ArrowLeft':
+        ev.preventDefault();
+        goPrev();
+        showToast('⏮ 上一首');
+        break;
+      case 'ArrowUp':
+        ev.preventDefault();
+        if (isReady) {
+          const vol = Math.min(100, (player.getVolume() || 0) + 5);
+          player.setVolume(vol);
+          player.unMute();
+          lastVolume = vol;
+          updateVolumeUI(vol, false);
+          showToast('🔊 音量 ' + vol + '%');
+        }
+        break;
+      case 'ArrowDown':
+        ev.preventDefault();
+        if (isReady) {
+          const vol = Math.max(0, (player.getVolume() || 0) - 5);
+          player.setVolume(vol);
+          if (vol === 0) player.mute();
+          lastVolume = vol > 0 ? vol : lastVolume;
+          updateVolumeUI(vol, vol === 0);
+          showToast('🔉 音量 ' + vol + '%');
+        }
+        break;
+      case 'm': case 'M':
+        toggleMute();
+        showToast(player.isMuted() ? '🔇 已靜音' : '🔊 已取消靜音');
+        break;
+      case 's': case 'S':
+        toggleShuffle();
+        break;
+      case 'r': case 'R':
+        cycleLoop();
+        break;
+      case 'l': case 'L':
+        toggleLyrics();
+        break;
+      case 'f': case 'F':
+        toggleFullscreen();
+        break;
+      case 'Escape':
+        if (fsOpen) toggleFullscreen();
+        else if (lyricsOpen) toggleLyrics();
+        else if (els.settingsOverlay.classList.contains('open')) closeSettings();
+        else if (els.kbdOverlay.classList.contains('open')) els.kbdOverlay.classList.remove('open');
+        break;
+    }
+  });
+
+  /* ============================================================
+     RESIZE HANDLER
+     ============================================================ */
+  window.addEventListener('resize', () => {
     updateCratePadding();
     requestAccordionUpdate();
   });
 
+  /* ============================================================
+     INIT
+     ============================================================ */
   loadYouTubeAPI();
 </script>
 
