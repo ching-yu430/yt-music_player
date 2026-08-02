@@ -23,7 +23,7 @@
   html, body {
     margin: 0;
     min-height: 100%;
-    background: radial-gradient(ellipse at 50% 15%, #2e2116 0%, #14100b 65%, #0a0806 100%);
+    background: radial-gradient(ellipse at 50% 15%, #ddc7a1 0%, #c9ab7c 55%, #b3925f 100%);
     font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
     color: var(--cream);
     overflow-x: hidden;
@@ -139,11 +139,74 @@
   }
   .id-bar button:hover { background: var(--brass-bright); }
 
+  .saved-label {
+    font-size: 11px;
+    color: var(--cream-dimmer);
+    letter-spacing: 0.05em;
+    margin: 16px 0 6px;
+  }
+  .saved-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .saved-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .saved-item:hover { background: rgba(255,255,255,0.09); }
+  .saved-item.active { border-color: var(--brass); background: rgba(184,135,74,0.18); }
+  .saved-name {
+    flex: 1;
+    font-size: 12.5px;
+    color: var(--cream-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+  .saved-item.active .saved-name { color: var(--brass-bright); font-weight: 600; }
+  .saved-remove {
+    background: none;
+    border: none;
+    color: var(--cream-dimmer);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 5px;
+    flex-shrink: 0;
+    border-radius: 4px;
+  }
+  .saved-remove:hover { color: var(--cream); background: rgba(0,0,0,0.25); }
+
   /* ===== overall layout: crate + console ===== */
   .rig {
     display: flex;
     align-items: stretch;
+    justify-content: center;
     gap: 14px;
+  }
+  /* an invisible spacer the same width as the crate, placed after the
+     console. Without this, the console (and the main disc inside it)
+     would sit off-centre on screen - shifted right by roughly half the
+     crate's width, since the crate only exists on the left. Balancing
+     it with an equal-width empty spacer on the right means the console
+     always lands exactly in the middle of the screen, regardless of the
+     playlist panel. Hidden on narrow screens where the layout stacks
+     vertically instead (see the max-width:620px rule below), since
+     there's nothing to balance there. */
+  .rig-spacer {
+    width: 240px;
+    flex-shrink: 0;
   }
 
   /* ===== record crate (left playlist rail) ===== */
@@ -391,6 +454,19 @@
     border-radius: 50%;
     clip-path: circle(50% at 50% 50%);
     -webkit-clip-path: circle(50% at 50% 50%);
+    /* many source thumbnails have their own straight-edged content (a
+       tilted photo, a plain-colour margin, letterboxing) sitting close
+       to the edge of the square crop. Even though the CSS clip below is
+       a mathematically perfect circle, those straight edges/margins can
+       read as "not quite round" right at the boundary. Scaling the
+       image up crops that outer margin away so every pixel touching the
+       circle's edge is genuine cover-art, not the thumbnail's own
+       background. 1.55x was tuned against a worst-case test thumbnail
+       (a tilted square inset with visible corner margin) - at 1.22x
+       about 5% of the visible circle was still that margin colour; at
+       1.55x it drops to ~0.008%, i.e. gone. */
+    transform: scale(1.55);
+    transform-origin: center;
   }
   .label::after {
     content: '';
@@ -517,6 +593,70 @@
   }
   .ctrl-btn.main:hover { opacity: 1; }
 
+  #shuffleBtn { margin-right: -4px; }
+  #shuffleBtn.active {
+    color: var(--brass-bright);
+    opacity: 1;
+  }
+  #shuffleBtn.active::after {
+    content: '';
+    display: block;
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: var(--brass-bright);
+    margin: 3px auto 0;
+  }
+
+  .volume-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 0 4px;
+  }
+  .vol-btn {
+    background: none;
+    border: none;
+    color: var(--cream-dim);
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.85;
+    flex-shrink: 0;
+    transition: opacity 0.15s, color 0.15s;
+  }
+  .vol-btn:hover { opacity: 1; color: var(--cream); }
+  .vol-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--brass), var(--brass-bright) 70%, rgba(255,255,255,0.12) 70%);
+    cursor: pointer;
+  }
+  .vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--brass-bright);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+  }
+  .vol-slider::-moz-range-thumb {
+    width: 12px; height: 12px;
+    border: none;
+    border-radius: 50%;
+    background: var(--brass-bright);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+  }
+  .vol-slider::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.12);
+  }
+
   .status-line {
     margin-top: 14px;
     text-align: center;
@@ -541,6 +681,7 @@
       width: min(92vw, 400px);
       height: 220px;
     }
+    .rig-spacer { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -563,11 +704,14 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.41 1.41 6.3 6.3-6.3 6.3 1.41 1.41 6.3-6.3 6.3 6.3 1.41-1.41-6.3-6.3 6.3-6.3z"/></svg>
       </button>
     </div>
-    <div class="settings-label">YouTube 播放清單 ID</div>
+    <div class="settings-label">YouTube 播放清單連結或 ID</div>
     <div class="id-bar">
-      <input id="playlistInput" type="text" placeholder="貼上播放清單 ID" value="PLaLEwIkg0K_s">
+      <input id="playlistInput" type="text" placeholder="貼上播放清單連結或 ID" value="PLaLEwIkg0K_s">
       <button id="loadBtn">載入</button>
     </div>
+
+    <div class="saved-label" id="savedLabel" style="display:none;">已儲存的清單(點選套用)</div>
+    <div class="saved-list" id="savedList"></div>
   </div>
 </div>
 
@@ -617,6 +761,9 @@
       </div>
 
       <div class="controls">
+        <button class="ctrl-btn" id="shuffleBtn" title="隨機播放">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04z"/></svg>
+        </button>
         <button class="ctrl-btn" id="prevBtn" title="上一首">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
         </button>
@@ -629,8 +776,18 @@
         </button>
       </div>
 
+      <div class="volume-row">
+        <button class="vol-btn" id="muteBtn" title="靜音">
+          <svg id="volIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h4l5 5V5L7 10zm13.5 2A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77"/></svg>
+          <svg id="muteIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63M19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.94 8.94 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71M4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9zM12 4 9.91 6.09 12 8.18z"/></svg>
+        </button>
+        <input type="range" id="volumeSlider" class="vol-slider" min="0" max="100" value="70">
+      </div>
+
       <div class="status-line" id="statusLine">準備就緒</div>
     </div>
+
+    <div class="rig-spacer" aria-hidden="true"></div>
 
   </div>
 
@@ -671,11 +828,21 @@
     statusLine: document.getElementById('statusLine'),
     playlistInput: document.getElementById('playlistInput'),
     loadBtn: document.getElementById('loadBtn'),
+    savedLabel: document.getElementById('savedLabel'),
+    savedList: document.getElementById('savedList'),
     crateScroll: document.getElementById('crateScroll'),
     settingsFab: document.getElementById('settingsFab'),
     settingsOverlay: document.getElementById('settingsOverlay'),
     settingsClose: document.getElementById('settingsClose'),
+    shuffleBtn: document.getElementById('shuffleBtn'),
+    muteBtn: document.getElementById('muteBtn'),
+    volIcon: document.getElementById('volIcon'),
+    muteIcon: document.getElementById('muteIcon'),
+    volumeSlider: document.getElementById('volumeSlider'),
   };
+
+  let shuffleOn = false;
+  let lastVolume = 70;
 
   // ===== settings modal =====
   function openSettings() { els.settingsOverlay.classList.add('open'); }
@@ -721,6 +888,8 @@
   function onPlayerReady() {
     isReady = true;
     setStatus('播放清單已載入,按下播放鍵開始');
+    player.setVolume(parseInt(els.volumeSlider.value, 10));
+    updateVolumeUI(parseInt(els.volumeSlider.value, 10), false);
     setTimeout(buildCrateFromPlayer, 600);
   }
 
@@ -767,6 +936,7 @@
       if (data.video_id) {
         els.albumImg.src = `https://img.youtube.com/vi/${data.video_id}/hqdefault.jpg`;
       }
+      refineSavedPlaylistName(data.author);
     } catch (err) {}
   }
 
@@ -795,8 +965,100 @@
     else player.playVideo();
   });
 
-  els.nextBtn.addEventListener('click', () => { if (isReady) player.nextVideo(); });
-  els.prevBtn.addEventListener('click', () => { if (isReady) player.previousVideo(); });
+  // ----- next / prev -----
+  // Previously these called player.nextVideo()/previousVideo() directly.
+  // Those native methods rely on the iframe's own internal playlist
+  // pointer, which can fall out of sync with what's actually on screen
+  // (e.g. right after a manual crate click, or before the playlist has
+  // fully settled) - when that happens the button silently does nothing
+  // or jumps somewhere unexpected. Driving navigation off our own
+  // crateItems/index instead of the iframe's internal state removes that
+  // whole class of mismatch, and lets us wrap around at the ends and
+  // support shuffle from the same code path.
+  function getCurrentCrateIndex() {
+    if (!isReady) return -1;
+    try {
+      const idx = player.getPlaylistIndex();
+      return idx >= 0 ? idx : crateIndex;
+    } catch (err) {
+      return crateIndex;
+    }
+  }
+
+  function playCrateIndex(idx) {
+    if (!isReady || !crateItems.length) return;
+    const wrapped = ((idx % crateItems.length) + crateItems.length) % crateItems.length;
+    player.playVideoAt(wrapped);
+  }
+
+  function goNext() {
+    if (!isReady || !crateItems.length) return;
+    const cur = getCurrentCrateIndex();
+    if (shuffleOn && crateItems.length > 1) {
+      let idx;
+      do { idx = Math.floor(Math.random() * crateItems.length); } while (idx === cur);
+      playCrateIndex(idx);
+    } else {
+      playCrateIndex(cur + 1);
+    }
+  }
+
+  function goPrev() {
+    if (!isReady || !crateItems.length) return;
+    const cur = getCurrentCrateIndex();
+    if (shuffleOn && crateItems.length > 1) {
+      let idx;
+      do { idx = Math.floor(Math.random() * crateItems.length); } while (idx === cur);
+      playCrateIndex(idx);
+    } else {
+      playCrateIndex(cur - 1);
+    }
+  }
+
+  els.nextBtn.addEventListener('click', goNext);
+  els.prevBtn.addEventListener('click', goPrev);
+
+  // ----- shuffle -----
+  els.shuffleBtn.addEventListener('click', () => {
+    shuffleOn = !shuffleOn;
+    els.shuffleBtn.classList.toggle('active', shuffleOn);
+    setStatus(shuffleOn ? '隨機播放已開啟' : '隨機播放已關閉');
+  });
+
+  // ----- volume -----
+  function updateVolumeUI(vol, muted) {
+    els.volumeSlider.value = vol;
+    const pct = Math.max(0, Math.min(100, vol));
+    els.volumeSlider.style.background =
+      `linear-gradient(90deg, var(--brass), var(--brass-bright) ${pct}%, rgba(255,255,255,0.12) ${pct}%)`;
+    const showMuted = muted || vol === 0;
+    els.volIcon.style.display = showMuted ? 'none' : '';
+    els.muteIcon.style.display = showMuted ? '' : 'none';
+  }
+
+  els.volumeSlider.addEventListener('input', (ev) => {
+    const vol = parseInt(ev.target.value, 10);
+    lastVolume = vol > 0 ? vol : lastVolume;
+    updateVolumeUI(vol, vol === 0);
+    if (isReady) {
+      player.setVolume(vol);
+      if (vol === 0) player.mute(); else player.unMute();
+    }
+  });
+
+  els.muteBtn.addEventListener('click', () => {
+    if (!isReady) return;
+    const currentlyMuted = player.isMuted();
+    if (currentlyMuted) {
+      player.unMute();
+      player.setVolume(lastVolume || 70);
+      updateVolumeUI(lastVolume || 70, false);
+    } else {
+      lastVolume = player.getVolume() || lastVolume;
+      player.mute();
+      updateVolumeUI(0, true);
+    }
+  });
 
   els.bar.addEventListener('click', (ev) => {
     if (!isReady) return;
@@ -806,10 +1068,106 @@
     player.seekTo(dur * pct, true);
   });
 
-  els.loadBtn.addEventListener('click', () => {
-    const val = els.playlistInput.value.trim();
-    if (!val) return;
-    currentPlaylistId = val;
+  // ===== playlist ID parsing =====
+  // Accepts a bare ID, or a full YouTube URL of any common shape
+  // (playlist?list=..., watch?v=...&list=..., youtu.be/...&list=...)
+  // and always returns just the bare playlist ID.
+  function extractPlaylistId(raw) {
+    const val = (raw || '').trim();
+    if (!val) return '';
+    try {
+      const url = new URL(val);
+      const listParam = url.searchParams.get('list');
+      if (listParam) return listParam;
+    } catch (err) {
+      // not a parseable absolute URL - fall through to regex/plain-ID handling
+    }
+    const m = val.match(/(?:^|[?&])list=([^&#\s]+)/);
+    if (m) return decodeURIComponent(m[1]);
+    return val.replace(/["'\s]/g, '');
+  }
+
+  // ===== saved playlists (localStorage) =====
+  const SAVED_PLAYLISTS_KEY = 'ytMusicPlayer.savedPlaylists';
+  const SAVED_PLAYLISTS_MAX = 10;
+
+  function loadSavedPlaylists() {
+    try {
+      const raw = localStorage.getItem(SAVED_PLAYLISTS_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list : [];
+    } catch (err) { return []; }
+  }
+
+  function writeSavedPlaylists(list) {
+    try { localStorage.setItem(SAVED_PLAYLISTS_KEY, JSON.stringify(list)); } catch (err) {}
+  }
+
+  function upsertSavedPlaylist(id, name) {
+    if (!id) return;
+    const list = loadSavedPlaylists();
+    const existing = list.find(function (p) { return p.id === id; });
+    if (existing) {
+      if (name) existing.name = name;
+      existing.savedAt = Date.now();
+    } else {
+      list.unshift({ id: id, name: name || id, savedAt: Date.now() });
+    }
+    writeSavedPlaylists(list.slice(0, SAVED_PLAYLISTS_MAX));
+    renderSavedPlaylists();
+  }
+
+  function removeSavedPlaylist(id) {
+    writeSavedPlaylists(loadSavedPlaylists().filter(function (p) { return p.id !== id; }));
+    renderSavedPlaylists();
+  }
+
+  // once we learn who the tracks are by (e.g. a "Topic" channel name),
+  // upgrade a playlist's saved label away from its raw ID so the list is
+  // actually readable at a glance.
+  function refineSavedPlaylistName(author) {
+    if (!author || !currentPlaylistId) return;
+    const list = loadSavedPlaylists();
+    const entry = list.find(function (p) { return p.id === currentPlaylistId; });
+    if (!entry || (entry.name && entry.name !== entry.id)) return;
+    entry.name = author + ' 的播放清單';
+    writeSavedPlaylists(list);
+    renderSavedPlaylists();
+  }
+
+  function renderSavedPlaylists() {
+    const list = loadSavedPlaylists();
+    els.savedLabel.style.display = list.length ? '' : 'none';
+    els.savedList.innerHTML = '';
+    list.forEach(function (p) {
+      const row = document.createElement('div');
+      row.className = 'saved-item' + (p.id === currentPlaylistId ? ' active' : '');
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'saved-name';
+      nameEl.textContent = p.name;
+      nameEl.title = p.id;
+      nameEl.addEventListener('click', function () { applyPlaylist(p.id); });
+
+      const removeEl = document.createElement('button');
+      removeEl.className = 'saved-remove';
+      removeEl.title = '移除這個清單';
+      removeEl.textContent = '×';
+      removeEl.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        removeSavedPlaylist(p.id);
+      });
+
+      row.appendChild(nameEl);
+      row.appendChild(removeEl);
+      els.savedList.appendChild(row);
+    });
+  }
+
+  function applyPlaylist(id) {
+    if (!id) return;
+    currentPlaylistId = id;
+    els.playlistInput.value = id;
     stopProgressLoop();
     els.disc.classList.remove('playing');
     els.tonearm.classList.remove('down');
@@ -821,8 +1179,19 @@
     if (isReady) {
       player.loadPlaylist({ list: currentPlaylistId });
     }
+    upsertSavedPlaylist(id);
     closeSettings();
+  }
+
+  els.loadBtn.addEventListener('click', () => {
+    const id = extractPlaylistId(els.playlistInput.value);
+    if (!id) return;
+    applyPlaylist(id);
   });
+
+  // seed the saved list with whatever playlist is loaded on first visit,
+  // and render whatever was already saved from previous visits
+  upsertSavedPlaylist(currentPlaylistId);
 
   // ===== record crate (playlist rail) =====
 
