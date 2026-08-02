@@ -603,13 +603,13 @@
     font-size: 13px; margin-top: 40px;
   }
   .lyrics-line {
-    padding: 5px 0; font-size: 13px; line-height: 1.6;
+    padding: 5px 0; font-size: calc(13px + var(--lyrics-size-offset, 0px)); line-height: 1.6;
     color: var(--cream-dim);
     transition: color .3s, font-size .3s, transform .3s;
     white-space: pre-wrap;
   }
   .lyrics-line.active {
-    color: var(--brass-bright); font-size: 15px; font-weight: 600;
+    color: var(--brass-bright); font-size: calc(15px + var(--lyrics-size-offset, 0px)); font-weight: 600;
     transform: translateX(4px);
   }
   .lyrics-line.past { color: var(--cream-muted); }
@@ -814,10 +814,10 @@
   .fs-right::-webkit-scrollbar { width: 3px; }
   .fs-right::-webkit-scrollbar-thumb { background: rgba(196,155,92,0.3); border-radius: 2px; }
   .fs-lyrics-line {
-    padding: 6px 0; font-size: 16px; line-height: 1.7; color: var(--fs-text-muted);
+    padding: 6px 0; font-size: calc(16px + var(--lyrics-size-offset, 0px)); line-height: 1.7; color: var(--fs-text-muted);
     transition: color .35s, font-size .35s, transform .35s; text-align: left;
   }
-  .fs-lyrics-line.active { color: var(--fs-text); font-size: 20px; font-weight: 600; transform: translateX(6px); }
+  .fs-lyrics-line.active { color: var(--fs-text); font-size: calc(20px + var(--lyrics-size-offset, 0px)); font-weight: 600; transform: translateX(6px); }
   .fs-lyrics-line.near { color: var(--fs-text-dim); }
   .fs-lyrics-placeholder { color: var(--fs-text-dim); font-size: 14px; text-align: center; margin-top: 40%; }
 
@@ -889,8 +889,8 @@
     .fs-content { flex-direction: column; gap: 16px; padding: 30px 20px; overflow-y: auto; }
     .fs-disc-wrap { width: min(50vw, 200px); }
     .fs-right { height: auto; max-height: 35vh; mask-image: none; -webkit-mask-image: none; }
-    .fs-lyrics-line { font-size: 14px; text-align: center; }
-    .fs-lyrics-line.active { font-size: 17px; transform: none; }
+    .fs-lyrics-line { font-size: calc(14px + var(--lyrics-size-offset, 0px)); text-align: center; }
+    .fs-lyrics-line.active { font-size: calc(17px + var(--lyrics-size-offset, 0px)); transform: none; }
     .fs-title { font-size: 17px; }
     .fs-info { max-width: 100%; }
   }
@@ -906,11 +906,205 @@
     .lyrics-column.open { height: 180px; }
     .fs-disc-wrap { width: min(45vw, 160px); }
   }
+  /* ============================================================
+     NEW ANIMATIONS
+     ============================================================ */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(0,0,0,0.3); }
+    50% { box-shadow: 0 0 10px 3px rgba(196,155,92,0.35), 0 0 0 3px rgba(0,0,0,0.3); }
+  }
+  @keyframes fabBreathe {
+    0%, 100% { box-shadow: 0 4px 14px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.12); }
+    50% { box-shadow: 0 4px 20px var(--shadow), 0 0 14px rgba(196,155,92,0.2), inset 0 1px 0 rgba(255,255,255,0.12); }
+  }
+
+  .crate { animation: fadeInUp 0.7s cubic-bezier(0.22,1,0.36,1) backwards; animation-delay: 0.1s; }
+  .turntable-section { animation: fadeInUp 0.7s cubic-bezier(0.22,1,0.36,1) backwards; animation-delay: 0.25s; }
+  .track-panel { animation: fadeInUp 0.7s cubic-bezier(0.22,1,0.36,1) backwards; animation-delay: 0.4s; }
+
+  .settings-overlay.open .settings-panel { animation: scaleIn 0.3s cubic-bezier(0.22,1,0.36,1); }
+  .kbd-overlay.open .kbd-panel { animation: scaleIn 0.25s cubic-bezier(0.22,1,0.36,1); }
+
+  .settings-fab { animation: fabBreathe 3s ease-in-out infinite; }
+  .settings-fab:hover { animation: none; }
+
+  .ctrl-btn:active { transform: scale(0.88) !important; transition: transform 0.05s !important; }
+  .ctrl-btn.main:active { transform: scale(0.9) !important; }
+  .extra-btn:active { transform: scale(0.95); }
+
+  .extra-btn:hover { box-shadow: 0 0 14px rgba(196,155,92,0.15); }
+  .extra-btn.active:hover { box-shadow: 0 0 14px rgba(196,155,92,0.3); }
+
+  body.is-playing .bar-knob { animation: pulseGlow 2s ease-in-out infinite; }
+
+  .cw-item { animation: fadeInUp 0.5s cubic-bezier(0.22,1,0.36,1) backwards; }
+
+  /* ============================================================
+     SAFARI & CHROME FIXES
+     ============================================================ */
+  html, body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  button, .ctrl-btn, .extra-btn, .fs-ctrl-btn, .vol-btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .fs-overlay:-webkit-full-screen {
+    background: linear-gradient(rgba(13,8,6,0.7), rgba(13,8,6,0.8)),
+      radial-gradient(circle at 50% 20%, #C4A882 0%, #A88B66 50%, #8A7050 100%);
+  }
+  .crate-scroll { transition: padding-top 0.25s ease; }
+
+  /* ============================================================
+     CRATE SEARCH (C)
+     ============================================================ */
+  .crate-header-actions { display: flex; align-items: center; gap: 4px; pointer-events: auto; }
+  .btn-crate-search {
+    background: none; border: none; color: var(--cream-muted); cursor: pointer;
+    padding: 4px; border-radius: 4px; display: flex; align-items: center;
+    transition: color .2s, background .2s;
+  }
+  .btn-crate-search:hover { color: var(--brass-bright); background: rgba(255,255,255,0.1); }
+  .crate-search-bar {
+    position: absolute; top: 28px; left: 0; right: 0; z-index: 31;
+    padding: 4px 10px 6px; background: linear-gradient(180deg, var(--walnut), var(--mocha));
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: none;
+  }
+  .crate-search-bar.open { display: block; animation: fadeInUp 0.2s ease; }
+  .crate-search-bar.open ~ .crate-scroll { padding-top: 62px; }
+  .crate-search-input {
+    width: 100%; background: var(--espresso);
+    border: 1px solid var(--walnut); color: var(--cream);
+    padding: 6px 10px; border-radius: 6px;
+    font-family: inherit; font-size: 12px;
+    outline: none; transition: border-color .2s;
+  }
+  .crate-search-input:focus { border-color: var(--brass); }
+  .crate-search-input::placeholder { color: var(--cream-muted); }
+  .record-item.search-hidden { display: none !important; }
+  [data-theme="cream"] .crate-search-input { border-color: rgba(0,0,0,0.15); }
+  [data-theme="cream"] .crate-search-bar { border-bottom-color: rgba(0,0,0,0.06); }
+
+  /* ============================================================
+     LYRICS FONT SIZE CONTROLS (D)
+     ============================================================ */
+  .lyrics-font-controls { display: flex; align-items: center; gap: 2px; }
+  .lyrics-font-btn {
+    background: none; border: none; color: var(--cream-dim);
+    cursor: pointer; padding: 2px 6px; border-radius: 4px;
+    font-size: 12px; font-weight: 600; font-family: inherit;
+    transition: color .2s, background .2s; line-height: 1;
+  }
+  .lyrics-font-btn:hover { color: var(--cream); background: rgba(255,255,255,0.08); }
+
+  /* ============================================================
+     GESTURE FEEDBACK (E)
+     ============================================================ */
+  .gesture-feedback {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff; padding: 14px 28px; border-radius: 16px;
+    font-size: 16px; font-weight: 600; font-family: inherit;
+    pointer-events: none; z-index: 400;
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .gesture-feedback.visible { opacity: 1; }
+
+  /* ============================================================
+     MINI PLAYER (G)
+     ============================================================ */
+  .mini-player {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 64px; z-index: 180;
+    background: linear-gradient(180deg, var(--walnut) 0%, var(--americano) 100%);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 -4px 20px var(--shadow);
+    display: flex; align-items: center;
+    padding: 0 12px 0 0; gap: 12px;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
+    pointer-events: none;
+  }
+  .mini-player.active { transform: translateY(0); pointer-events: auto; }
+  .mini-player-progress-top {
+    position: absolute; top: -2px; left: 0; right: 0; height: 3px;
+    background: rgba(0,0,0,0.25);
+  }
+  .mini-player-progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--brass), var(--brass-bright));
+    border-radius: 0 2px 2px 0; transition: width 0.3s linear;
+  }
+  .mini-player-art {
+    width: 64px; height: 64px; flex-shrink: 0;
+    background-color: var(--terracotta);
+    background-size: cover; background-position: center;
+  }
+  .mini-player-info { flex: 1; min-width: 0; padding: 8px 0; }
+  .mini-player-title {
+    font-size: 13px; font-weight: 600; color: var(--cream);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mini-player-artist {
+    font-size: 10px; color: var(--cream-dim);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    font-family: 'JetBrains Mono','SF Mono',Menlo,monospace;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  .mini-player-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .mini-ctrl {
+    background: none; border: none; color: var(--cream); cursor: pointer;
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, transform .1s;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  }
+  .mini-ctrl:hover { background: rgba(255,255,255,0.1); }
+  .mini-ctrl:active { transform: scale(0.88); }
+  .mini-ctrl.mini-play {
+    width: 40px; height: 40px;
+    background: linear-gradient(180deg, var(--brass-bright), var(--brass));
+    color: #111; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .mini-expand {
+    background: none; border: none; color: var(--cream-dim);
+    cursor: pointer; padding: 6px; border-radius: 4px;
+    transition: color .2s; display: flex; align-items: center;
+  }
+  .mini-expand:hover { color: var(--cream); }
+
+  body.mini-player-active .stage { display: none; }
+  body.mini-player-active .settings-fab { bottom: 80px; }
+  body.mini-player-active .kbd-hint-btn { bottom: 80px; }
+
+  @media (max-width: 960px) {
+    .mini-player {
+      padding-bottom: env(safe-area-inset-bottom);
+      height: calc(64px + env(safe-area-inset-bottom));
+    }
+  }
+  @media (max-height: 700px) {
+    .settings-panel { max-height: 85vh; overflow-y: auto; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .disc-spin, .fs-disc-spin { animation: none; }
     .tonearm { transition: none; }
     .toast { animation: none; opacity: 1; transform: none; }
     .fs-particle, .fs-glow { animation: none; }
+    .crate, .turntable-section, .track-panel { animation: none; }
+    .settings-panel, .kbd-panel { animation: none; }
+    .settings-fab { animation: none; }
+    .cw-item { animation: none; }
+    .bar-knob { animation: none; }
+    .mini-player { transition: none; }
   }
 </style>
 </head>
@@ -1041,9 +1235,17 @@
     <div class="crate">
       <div class="crate-header">
         <span class="crate-label">播放清單</span>
-        <button class="btn-cover-wall" id="coverWallOpenBtn" title="網格封面牆模式 (G)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z"/></svg>
-        </button>
+        <div class="crate-header-actions">
+          <button class="btn-crate-search" id="crateSearchToggle" title="搜尋歌曲">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          </button>
+          <button class="btn-cover-wall" id="coverWallOpenBtn" title="網格封面牆模式 (G)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="crate-search-bar" id="crateSearchBar">
+        <input type="text" id="crateSearchInput" class="crate-search-input" placeholder="搜尋歌曲名稱…">
       </div>
       <div class="crate-scroll" id="crateScroll">
         <div class="crate-pad"></div>
@@ -1138,6 +1340,9 @@
           <button class="extra-btn" id="fsBtn" title="全螢幕視覺化 (F)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7zm-2-4h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg> 視覺化
           </button>
+          <button class="extra-btn" id="miniPlayerBtn" title="迷你播放器">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></svg> 迷你
+          </button>
         </div>
         <div class="status-line" id="statusLine">準備就緒</div>
       </div>
@@ -1147,7 +1352,11 @@
     <div class="lyrics-column" id="lyricsColumn">
       <div class="lyrics-header">
         <span>♫ 歌詞</span>
-        <button id="lyricsClose"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.41 1.41 6.3 6.3-6.3 6.3 1.41 1.41 6.3-6.3 6.3 6.3 1.41-1.41-6.3-6.3 6.3-6.3z"/></svg></button>
+        <div class="lyrics-font-controls">
+          <button class="lyrics-font-btn" id="lyricsFontDown" title="縮小字體">A−</button>
+          <button class="lyrics-font-btn" id="lyricsFontUp" title="放大字體">A+</button>
+          <button id="lyricsClose"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.41 1.41 6.3 6.3-6.3 6.3 1.41 1.41 6.3-6.3 6.3 6.3 1.41-1.41-6.3-6.3 6.3-6.3z"/></svg></button>
+        </div>
       </div>
       <div class="lyrics-body" id="lyricsBody">
         <p class="lyrics-placeholder">播放歌曲後自動搜尋歌詞</p>
@@ -1156,6 +1365,33 @@
 
   </div>
 </div>
+
+<!-- ============== MINI PLAYER ============== -->
+<div class="mini-player" id="miniPlayer">
+  <div class="mini-player-progress-top"><div class="mini-player-progress-fill" id="miniProgressFill"></div></div>
+  <div class="mini-player-art" id="miniPlayerArt"></div>
+  <div class="mini-player-info">
+    <div class="mini-player-title" id="miniPlayerTitle">—</div>
+    <div class="mini-player-artist" id="miniPlayerArtist">—</div>
+  </div>
+  <div class="mini-player-controls">
+    <button class="mini-ctrl" id="miniPrevBtn" title="上一首">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+    </button>
+    <button class="mini-ctrl mini-play" id="miniPlayBtn" title="播放/暫停">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="mini-ctrl" id="miniNextBtn" title="下一首">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-9.5 6L15 18V6z"/></svg>
+    </button>
+  </div>
+  <button class="mini-expand" id="miniExpandBtn" title="展開播放器">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>
+  </button>
+</div>
+
+<!-- GESTURE FEEDBACK -->
+<div class="gesture-feedback" id="gestureFeedback"></div>
 
 <div id="yt-host"><div id="yt-player"></div></div>
 
@@ -1171,6 +1407,7 @@
   let fsOpen = false, fsParticlesCreated = false, specTimer = null;
   let dragState = null;
   let sleepTimerEnd = 0, sleepTimerInterval = null, baseStatus = '準備就緒';
+  let miniPlayerOpen = false, lyricsSizeOffset = 0;
 
   const els = {
     disc: document.getElementById('disc'), tonearm: document.getElementById('tonearm'),
@@ -1203,7 +1440,23 @@
     themeBtns: document.querySelectorAll('#themeBar button'), sleepBtns: document.querySelectorAll('#sleepBar button'),
     coverWallOpenBtn: document.getElementById('coverWallOpenBtn'), coverWallOverlay: document.getElementById('coverWallOverlay'),
     cwCloseBtn: document.getElementById('cwCloseBtn'), cwGrid: document.getElementById('cwGrid'),
-    fsSpectrum: document.getElementById('fsSpectrum')
+    fsSpectrum: document.getElementById('fsSpectrum'),
+    crateSearchToggle: document.getElementById('crateSearchToggle'),
+    crateSearchBar: document.getElementById('crateSearchBar'),
+    crateSearchInput: document.getElementById('crateSearchInput'),
+    lyricsFontDown: document.getElementById('lyricsFontDown'),
+    lyricsFontUp: document.getElementById('lyricsFontUp'),
+    miniPlayer: document.getElementById('miniPlayer'),
+    miniPlayerArt: document.getElementById('miniPlayerArt'),
+    miniPlayerTitle: document.getElementById('miniPlayerTitle'),
+    miniPlayerArtist: document.getElementById('miniPlayerArtist'),
+    miniProgressFill: document.getElementById('miniProgressFill'),
+    miniPlayBtn: document.getElementById('miniPlayBtn'),
+    miniPrevBtn: document.getElementById('miniPrevBtn'),
+    miniNextBtn: document.getElementById('miniNextBtn'),
+    miniExpandBtn: document.getElementById('miniExpandBtn'),
+    miniPlayerBtn: document.getElementById('miniPlayerBtn'),
+    gestureFeedback: document.getElementById('gestureFeedback')
   };
 
   /* ============================================================
@@ -1331,13 +1584,15 @@
     if (e.data === S.PLAYING) {
       els.disc.classList.add('playing'); els.tonearm.classList.add('down');
       els.playIcon.style.display = 'none'; els.pauseIcon.style.display = '';
+      document.body.classList.add('is-playing');
       updateTrackMeta(); startProgressLoop(); setStatus('播放中');
       if (!crateItems.length) buildCrateFromPlayer();
-      syncCrateToPlayer(); syncFsPlayState(true);
+      syncCrateToPlayer(); syncFsPlayState(true); syncMiniPlayer();
     } else if (e.data === S.PAUSED) {
       els.disc.classList.remove('playing'); els.tonearm.classList.remove('down');
       els.playIcon.style.display = ''; els.pauseIcon.style.display = 'none';
-      stopProgressLoop(); setStatus('已暫停'); syncFsPlayState(false);
+      document.body.classList.remove('is-playing');
+      stopProgressLoop(); setStatus('已暫停'); syncFsPlayState(false); syncMiniPlayer();
     } else if (e.data === S.ENDED) { handleTrackEnd();
     } else if (e.data === S.CUED) {
       updateTrackMeta(); setStatus('已就緒');
@@ -1384,6 +1639,7 @@
       els.curTime.textContent = fmtTime(cur); els.durTime.textContent = fmtTime(dur);
       els.fsBarFill.style.width = pct + '%';
       els.fsCurTime.textContent = fmtTime(cur); els.fsDurTime.textContent = fmtTime(dur);
+      if (miniPlayerOpen) els.miniProgressFill.style.width = pct + '%';
       if (currentLyricsData && currentLyricsData.synced) {
         if (lyricsOpen) highlightLyricLine(cur);
         if (fsOpen) highlightFsLyrics(cur);
@@ -1426,11 +1682,12 @@
     els.volIcon.style.display = (muted||vol===0) ? 'none' : ''; els.muteIcon.style.display = (muted||vol===0) ? '' : 'none';
   }
   els.volumeSlider.addEventListener('input', ev => { const v = parseInt(ev.target.value,10); lastVolume = v>0?v:lastVolume; updateVolumeUI(v, v===0); if (isReady) { player.setVolume(v); if(v===0)player.mute(); else player.unMute(); } });
-  els.muteBtn.addEventListener('click', () => {
+  function toggleMute() {
     if (!isReady) return;
     if (player.isMuted()) { player.unMute(); player.setVolume(lastVolume||70); updateVolumeUI(lastVolume||70,false); }
     else { lastVolume = player.getVolume()||lastVolume; player.mute(); updateVolumeUI(0,true); }
-  });
+  }
+  els.muteBtn.addEventListener('click', toggleMute);
   els.bar.addEventListener('click', ev => { if (!isReady) return; const r = els.bar.getBoundingClientRect(); player.seekTo((player.getDuration()||0) * ((ev.clientX - r.left)/r.width), true); });
   els.fsBar.addEventListener('click', ev => { if (!isReady) return; const r = els.fsBar.getBoundingClientRect(); player.seekTo((player.getDuration()||0) * ((ev.clientX - r.left)/r.width), true); });
 
@@ -1753,6 +2010,128 @@
   });
 
   window.addEventListener('resize', () => { updateCratePadding(); requestAccordionUpdate(); });
+
+  /* ============================================================
+     CRATE SEARCH (C)
+     ============================================================ */
+  els.crateSearchToggle.addEventListener('click', () => {
+    const bar = els.crateSearchBar;
+    bar.classList.toggle('open');
+    if (bar.classList.contains('open')) { els.crateSearchInput.focus(); }
+    else { els.crateSearchInput.value = ''; filterCrate(''); }
+  });
+  els.crateSearchInput.addEventListener('input', e => filterCrate(e.target.value));
+  els.crateSearchInput.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      els.crateSearchBar.classList.remove('open');
+      els.crateSearchInput.value = ''; filterCrate('');
+      els.crateSearchInput.blur();
+    }
+  });
+  function filterCrate(query) {
+    const q = query.toLowerCase().trim();
+    crateItems.forEach(c => {
+      const name = c.nameEl.textContent.toLowerCase();
+      c.el.classList.toggle('search-hidden', q !== '' && !name.includes(q));
+    });
+    requestAccordionUpdate();
+  }
+
+  /* ============================================================
+     LYRICS FONT SIZE (D)
+     ============================================================ */
+  els.lyricsFontUp.addEventListener('click', () => {
+    lyricsSizeOffset = Math.min(10, lyricsSizeOffset + 2);
+    document.documentElement.style.setProperty('--lyrics-size-offset', lyricsSizeOffset + 'px');
+    showToast('🔤 字體放大');
+  });
+  els.lyricsFontDown.addEventListener('click', () => {
+    lyricsSizeOffset = Math.max(-4, lyricsSizeOffset - 2);
+    document.documentElement.style.setProperty('--lyrics-size-offset', lyricsSizeOffset + 'px');
+    showToast('🔤 字體縮小');
+  });
+
+  /* ============================================================
+     GESTURE CONTROLS (E)
+     ============================================================ */
+  (function initGestures() {
+    const stage = document.querySelector('.stage');
+    let gStartX = 0, gStartY = 0, gStartTime = 0;
+    stage.addEventListener('touchstart', e => {
+      if (e.target.closest('button, input, .bar, .vol-slider, .crate-scroll, .lyrics-body')) return;
+      gStartX = e.touches[0].clientX; gStartY = e.touches[0].clientY; gStartTime = Date.now();
+    }, { passive: true });
+    stage.addEventListener('touchend', e => {
+      if (!gStartTime) return;
+      const dt = Date.now() - gStartTime; gStartTime = 0;
+      if (dt > 500) return;
+      const dx = e.changedTouches[0].clientX - gStartX;
+      const dy = e.changedTouches[0].clientY - gStartY;
+      const absDx = Math.abs(dx), absDy = Math.abs(dy);
+      if (absDx > 60 && absDx > absDy * 1.5) {
+        if (dx < 0) { goNext(); showGestureFeedback('⏭ 下一首'); }
+        else { goPrev(); showGestureFeedback('⏮ 上一首'); }
+      } else if (absDy > 80 && absDy > absDx * 1.5 && isReady) {
+        if (dy < 0) {
+          const v = Math.min(100, (player.getVolume()||0) + 10);
+          player.setVolume(v); player.unMute(); lastVolume = v;
+          updateVolumeUI(v, false); showGestureFeedback('🔊 音量 ' + v + '%');
+        } else {
+          const v = Math.max(0, (player.getVolume()||0) - 10);
+          player.setVolume(v); if(v===0) player.mute();
+          lastVolume = v > 0 ? v : lastVolume;
+          updateVolumeUI(v, v===0); showGestureFeedback('🔉 音量 ' + v + '%');
+        }
+      }
+    }, { passive: true });
+  })();
+  let gestureFbTimer = null;
+  function showGestureFeedback(msg) {
+    els.gestureFeedback.textContent = msg;
+    els.gestureFeedback.classList.add('visible');
+    clearTimeout(gestureFbTimer);
+    gestureFbTimer = setTimeout(() => els.gestureFeedback.classList.remove('visible'), 800);
+  }
+
+  /* ============================================================
+     MINI PLAYER (G)
+     ============================================================ */
+  els.miniPlayerBtn.addEventListener('click', toggleMiniPlayer);
+  els.miniExpandBtn.addEventListener('click', toggleMiniPlayer);
+  els.miniPlayBtn.addEventListener('click', togglePlay);
+  els.miniPrevBtn.addEventListener('click', goPrev);
+  els.miniNextBtn.addEventListener('click', goNext);
+  function toggleMiniPlayer() {
+    miniPlayerOpen = !miniPlayerOpen;
+    document.body.classList.toggle('mini-player-active', miniPlayerOpen);
+    els.miniPlayer.classList.toggle('active', miniPlayerOpen);
+    els.miniPlayerBtn.classList.toggle('active', miniPlayerOpen);
+    if (miniPlayerOpen) { syncMiniPlayer(); showToast('🎵 迷你播放器模式'); }
+    else { showToast('🎵 已展開播放器'); }
+  }
+  function syncMiniPlayer() {
+    if (!miniPlayerOpen || !isReady) return;
+    try {
+      const data = player.getVideoData();
+      els.miniPlayerTitle.textContent = data.title || '—';
+      els.miniPlayerArtist.textContent = cleanAuthor(data.author) || '—';
+      if (data.video_id) els.miniPlayerArt.style.backgroundImage = 'url(https://img.youtube.com/vi/' + data.video_id + '/mqdefault.jpg)';
+    } catch(e) {}
+    const playing = isReady && player.getPlayerState() === YT.PlayerState.PLAYING;
+    els.miniPlayBtn.innerHTML = playing ?
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>' :
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+  }
+
+  /* Cover wall staggered animation */
+  new MutationObserver(() => {
+    if (els.coverWallOverlay.classList.contains('open')) {
+      els.cwGrid.querySelectorAll('.cw-item').forEach((item, i) => {
+        item.style.animationDelay = (i * 0.03) + 's';
+      });
+    }
+  }).observe(els.coverWallOverlay, { attributes: true, attributeFilter: ['class'] });
+
   loadYouTubeAPI();
 </script>
 </body>
