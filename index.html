@@ -1433,7 +1433,11 @@
     <div class="lyrics-column" id="lyricsColumn">
       <div class="lyrics-header">
         <span>♫ 歌詞</span>
-        <div class="lyrics-font-controls">
+        <div class="lyrics-font-controls" style="display:flex; align-items:center; gap:2px;">
+          <button class="lyrics-font-btn" id="lyricsSyncDown" title="歌詞提早 0.5 秒">-</button>
+          <span id="lyricsSyncDisplay" style="font-size:12px; font-variant-numeric:tabular-nums; min-width:32px; text-align:center; color:var(--cream-dim); cursor:default;" title="歌詞時間校正">0.0s</span>
+          <button class="lyrics-font-btn" id="lyricsSyncUp" title="歌詞延遲 0.5 秒">+</button>
+          <div style="width:1px; height:12px; background:rgba(255,255,255,0.15); margin:0 4px;"></div>
           <button class="lyrics-font-btn" id="lyricsFontDown" title="縮小字體">A−</button>
           <button class="lyrics-font-btn" id="lyricsFontUp" title="放大字體">A+</button>
           <button id="lyricsClose"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.71 12 12.01l-6.3-6.3-1.41 1.41 6.3 6.3-6.3 6.3 1.41 1.41 6.3-6.3 6.3 6.3 1.41-1.41-6.3-6.3 6.3-6.3z"/></svg></button>
@@ -1504,6 +1508,7 @@
   let shuffleOn = false, loopMode = 'off', lastVolume = 70, currentYtIndex = -1;
   let mainBarSeeking = false, fsBarSeeking = false;
   let lyricsOpen = false, currentLyricsData = null, lastLyricsVideoId = '';
+  let lyricsTimeOffset = 0;
   let fsOpen = false, fsParticlesCreated = false, specTimer = null;
   let dragState = null;
   let sleepTimerEnd = 0, sleepTimerInterval = null, baseStatus = '準備就緒';
@@ -1545,6 +1550,9 @@
     crateSearchToggle: document.getElementById('crateSearchToggle'),
     crateSearchBar: document.getElementById('crateSearchBar'),
     crateSearchInput: document.getElementById('crateSearchInput'),
+    lyricsSyncDown: document.getElementById('lyricsSyncDown'),
+    lyricsSyncUp: document.getElementById('lyricsSyncUp'),
+    lyricsSyncDisplay: document.getElementById('lyricsSyncDisplay'),
     lyricsFontDown: document.getElementById('lyricsFontDown'),
     lyricsFontUp: document.getElementById('lyricsFontUp'),
     miniPlayer: document.getElementById('miniPlayer'),
@@ -1773,10 +1781,11 @@
       els.fsDurTime.textContent = fmtTime(dur);
       if (miniPlayerOpen) els.miniProgressFill.style.width = pct + '%';
       if (currentLyricsData && currentLyricsData.synced) {
-        if (lyricsOpen) highlightLyricLine(cur);
-        if (fsOpen) highlightFsLyrics(cur);
-        if (miniLyricsOpen) highlightMiniLyrics(cur);
-        updateFloatingLyrics(cur);
+        const adjustedCur = cur - lyricsTimeOffset;
+        if (lyricsOpen) highlightLyricLine(adjustedCur);
+        if (fsOpen) highlightFsLyrics(adjustedCur);
+        if (miniLyricsOpen) highlightMiniLyrics(adjustedCur);
+        updateFloatingLyrics(adjustedCur);
       } else {
         els.floatingLyrics.classList.remove('show');
       }
@@ -2100,6 +2109,7 @@
     }); return result.sort((a,b)=>a.time-b.time);
   }
   async function fetchLyrics(videoTitle, author) {
+    lyricsTimeOffset = 0; if (els.lyricsSyncDisplay) els.lyricsSyncDisplay.textContent = '0.0s';
     if (!videoTitle) return; const info = parseSongInfo(videoTitle);
     els.lyricsBody.innerHTML = '<p class="lyrics-placeholder">搜尋歌詞中…</p>'; els.fsLyrics.innerHTML = '<div class="fs-lyrics-placeholder">搜尋歌詞中…</div>'; els.miniLyricsBody.innerHTML = '<div class="mini-lyrics-placeholder">搜尋歌詞中…</div>';
     try {
@@ -2258,8 +2268,16 @@
   }
 
   /* ============================================================
-     LYRICS FONT SIZE (D)
+     LYRICS FONT SIZE & SYNC (D)
      ============================================================ */
+  els.lyricsSyncUp.addEventListener('click', () => {
+    lyricsTimeOffset += 0.5;
+    els.lyricsSyncDisplay.textContent = (lyricsTimeOffset > 0 ? '+' : '') + lyricsTimeOffset.toFixed(1) + 's';
+  });
+  els.lyricsSyncDown.addEventListener('click', () => {
+    lyricsTimeOffset -= 0.5;
+    els.lyricsSyncDisplay.textContent = (lyricsTimeOffset > 0 ? '+' : '') + lyricsTimeOffset.toFixed(1) + 's';
+  });
   els.lyricsFontUp.addEventListener('click', () => {
     lyricsSizeOffset = Math.min(10, lyricsSizeOffset + 2);
     document.documentElement.style.setProperty('--lyrics-size-offset', lyricsSizeOffset + 'px');
