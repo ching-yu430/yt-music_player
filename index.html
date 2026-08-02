@@ -497,9 +497,6 @@
     transition: transform .1s;
   }
   .bar:hover .bar-knob { transform: translate(-50%,-50%) scale(1.3); }
-  .bar { touch-action: none; }
-  .bar.dragging .bar-knob { transform: translate(-50%,-50%) scale(1.45); transition: none; box-shadow: 0 0 0 3px rgba(0,0,0,0.3), 0 0 10px 2px var(--brass-bright); }
-  .bar.dragging .bar-fill { transition: none; }
   .controls {
     display: flex; align-items: center; justify-content: center; gap: 14px;
   }
@@ -792,18 +789,8 @@
   }
   .fs-progress { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; }
   .fs-progress .time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--fs-text-dim); width: 36px; text-align: center; flex-shrink: 0; }
-  .fs-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; position: relative; min-width: 80px; cursor: pointer; touch-action: none; }
+  .fs-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; position: relative; min-width: 80px; cursor: pointer; }
   .fs-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; border-radius: 2px; background: linear-gradient(90deg, var(--brass), var(--brass-bright)); }
-  .fs-bar-knob {
-    position: absolute; top: 50%; width: 11px; height: 11px;
-    background: var(--brass-bright); border-radius: 50%;
-    transform: translate(-50%, -50%) scale(0); left: 0%;
-    box-shadow: 0 0 0 3px rgba(0,0,0,0.35);
-    transition: transform .15s ease;
-  }
-  .fs-bar:hover .fs-bar-knob { transform: translate(-50%,-50%) scale(1); }
-  .fs-bar.dragging .fs-bar-knob { transform: translate(-50%,-50%) scale(1.3); transition: none; box-shadow: 0 0 0 3px rgba(0,0,0,0.35), 0 0 10px 2px var(--brass-bright); }
-  .fs-bar.dragging .fs-bar-fill { transition: none; }
 
   /* Audio Spectrum */
   .fs-spectrum {
@@ -924,59 +911,7 @@
     .tonearm { transition: none; }
     .toast { animation: none; opacity: 1; transform: none; }
     .fs-particle, .fs-glow { animation: none; }
-    .rig, .record-item, .settings-overlay.open, .settings-overlay.open .settings-panel,
-    .cover-wall-overlay.open, .meta.fade-swap .track-title, .meta.fade-swap .track-artist,
-    .fs-info.fade-swap .fs-title, .fs-info.fade-swap .fs-artist { animation: none !important; }
   }
-
-  /* ============================================================
-     ENTRANCE & INTERACTION ANIMATIONS
-     ============================================================ */
-  @keyframes rig-in {
-    from { opacity: 0; transform: translateY(22px) scale(.97); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .rig { animation: rig-in .65s cubic-bezier(.22,.75,.3,1) both; }
-
-  @keyframes item-in {
-    from { opacity: 0; transform: translateY(10px) scale(.96); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .record-item { animation: item-in .4s cubic-bezier(.22,.75,.3,1) both; }
-
-  @keyframes modal-dim { from { background-color: rgba(0,0,0,0); } to { background-color: rgba(0,0,0,0.6); } }
-  @keyframes modal-pop {
-    from { opacity: 0; transform: scale(.93) translateY(10px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  .settings-overlay.open { animation: modal-dim .2s ease; }
-  .settings-overlay.open .settings-panel { animation: modal-pop .3s cubic-bezier(.22,.85,.3,1); }
-
-  @keyframes cw-dim { from { opacity: 0; } to { opacity: 1; } }
-  .cover-wall-overlay.open { animation: cw-dim .25s ease; }
-
-  @keyframes meta-fade {
-    from { opacity: 0; transform: translateY(5px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .meta.fade-swap .track-title,
-  .meta.fade-swap .track-artist,
-  .fs-info.fade-swap .fs-title,
-  .fs-info.fade-swap .fs-artist { animation: meta-fade .4s ease; }
-
-  /* Button press feedback */
-  .ctrl-btn, .vol-btn, .extra-btn, .btn-cover-wall, .fs-ctrl-btn, .settings-close,
-  .cw-close, .chip-bar button, .id-bar button, .saved-remove {
-    transition: transform .12s ease, opacity .15s ease, background .2s ease, color .2s ease, border-color .2s ease;
-  }
-  .ctrl-btn:active { transform: scale(0.88); }
-  .ctrl-btn.main:active { transform: scale(0.9); }
-  .fs-ctrl-btn:active { transform: scale(0.92); }
-  .vol-btn:active, .extra-btn:active, .btn-cover-wall:active, .chip-bar button:active { transform: scale(0.92); }
-
-  /* Subtle lift on the turntable when hovered */
-  .turntable-section { transition: box-shadow .3s ease, transform .3s ease; }
-  .turntable-section:hover { transform: translateY(-2px); }
 </style>
 </head>
 <body>
@@ -1050,7 +985,7 @@
           </div>
         </div>
       </div>
-      <div class="fs-info" id="fsInfoBlock">
+      <div class="fs-info">
         <div class="fs-title" id="fsTitle">—</div>
         <div class="fs-artist" id="fsArtist">—</div>
         <div class="fs-controls">
@@ -1063,7 +998,7 @@
         </div>
         <div class="fs-progress">
           <span class="time" id="fsCurTime">0:00</span>
-          <div class="fs-bar" id="fsBar"><div class="fs-bar-fill" id="fsBarFill"></div><div class="fs-bar-knob" id="fsBarKnob"></div></div>
+          <div class="fs-bar" id="fsBar"><div class="fs-bar-fill" id="fsBarFill"></div></div>
           <span class="time" id="fsDurTime">0:00</span>
         </div>
       </div>
@@ -1170,7 +1105,7 @@
     <!-- RIGHT: Track Info Panel -->
     <div class="track-panel">
       <div class="track-panel-inner">
-        <div class="meta" id="metaBlock">
+        <div class="meta">
           <div class="track-title" id="trackTitle">請在設定中貼上播放清單連結</div>
           <div class="track-artist" id="trackArtist">—</div>
         </div>
@@ -1257,8 +1192,7 @@
     lyricsClose: document.getElementById('lyricsClose'), fsOverlay: document.getElementById('fsOverlay'),
     fsTitle: document.getElementById('fsTitle'), fsArtist: document.getElementById('fsArtist'),
     fsAlbumImg: document.getElementById('fsAlbumImg'), fsBarFill: document.getElementById('fsBarFill'),
-    fsBar: document.getElementById('fsBar'), fsBarKnob: document.getElementById('fsBarKnob'), fsCurTime: document.getElementById('fsCurTime'),
-    metaBlock: document.getElementById('metaBlock'), fsInfoBlock: document.getElementById('fsInfoBlock'),
+    fsBar: document.getElementById('fsBar'), fsCurTime: document.getElementById('fsCurTime'),
     fsDurTime: document.getElementById('fsDurTime'), fsCloseBtn: document.getElementById('fsCloseBtn'),
     fsParticles: document.getElementById('fsParticles'), fsBtn: document.getElementById('fsBtn'),
     fsPlayBtn: document.getElementById('fsPlayBtn'), fsPlayIcon: document.getElementById('fsPlayIcon'),
@@ -1419,16 +1353,9 @@
   /* ============================================================
      TRACK META & PROGRESS
      ============================================================ */
-  function triggerMetaFade() {
-    [els.metaBlock, els.fsInfoBlock].forEach(el => {
-      if (!el) return;
-      el.classList.remove('fade-swap'); void el.offsetWidth; el.classList.add('fade-swap');
-    });
-  }
   function updateTrackMeta() {
     try {
       const data = player.getVideoData(); const author = cleanAuthor(data.author);
-      if (data.video_id !== lastLyricsVideoId) triggerMetaFade();
       els.trackTitle.textContent = data.title || '未知曲目';
       els.trackArtist.textContent = author;
       if (data.video_id) els.albumImg.src = 'https://img.youtube.com/vi/' + data.video_id + '/hqdefault.jpg';
@@ -1453,16 +1380,10 @@
       if (!isReady) return;
       const cur = player.getCurrentTime() || 0, dur = player.getDuration() || 0;
       const pct = dur > 0 ? (cur / dur) * 100 : 0;
-      if (!barDrag.isDragging()) {
-        els.barFill.style.width = pct + '%'; els.barKnob.style.left = pct + '%';
-        els.curTime.textContent = fmtTime(cur);
-      }
-      els.durTime.textContent = fmtTime(dur);
-      if (!fsBarDrag.isDragging()) {
-        els.fsBarFill.style.width = pct + '%';
-        els.fsCurTime.textContent = fmtTime(cur);
-      }
-      els.fsDurTime.textContent = fmtTime(dur);
+      els.barFill.style.width = pct + '%'; els.barKnob.style.left = pct + '%';
+      els.curTime.textContent = fmtTime(cur); els.durTime.textContent = fmtTime(dur);
+      els.fsBarFill.style.width = pct + '%';
+      els.fsCurTime.textContent = fmtTime(cur); els.fsDurTime.textContent = fmtTime(dur);
       if (currentLyricsData && currentLyricsData.synced) {
         if (lyricsOpen) highlightLyricLine(cur);
         if (fsOpen) highlightFsLyrics(cur);
@@ -1482,15 +1403,8 @@
   }
   function getVisualIndex() { if (!isReady || !crateItems.length) return -1; try { return crateItems.findIndex(c => c.ytIndex === player.getPlaylistIndex()); } catch(e) { return -1; } }
   function playCrateByVisualIndex(vi) { if (!isReady || !crateItems.length) return; player.playVideoAt(crateItems[((vi % crateItems.length) + crateItems.length) % crateItems.length].ytIndex); }
-  // NOTE: right as a track ENDS, the YouTube IFrame API's internal playlist
-  // cursor has *already* moved on to the next index before the ENDED event
-  // fires — calling getPlaylistIndex()/getVisualIndex() at that instant
-  // returns the wrong "current" track. That stale/incorrect index was what
-  // broke shuffle (it looked like it kept picking predictable tracks). We
-  // use our own tracked crateIndex (kept in sync while a track is actually
-  // playing) instead of re-querying the player at the moment of transition.
-  function goNext() { if (!isReady || !crateItems.length) return; const cur = crateIndex; if (shuffleOn && crateItems.length > 1) { let i; do { i = Math.floor(Math.random()*crateItems.length); } while(i===cur); playCrateByVisualIndex(i); } else playCrateByVisualIndex(cur + 1); }
-  function goPrev() { if (!isReady || !crateItems.length) return; const cur = crateIndex; if (shuffleOn && crateItems.length > 1) { let i; do { i = Math.floor(Math.random()*crateItems.length); } while(i===cur); playCrateByVisualIndex(i); } else playCrateByVisualIndex(cur - 1); }
+  function goNext() { if (!isReady || !crateItems.length) return; const cur = getVisualIndex(); if (shuffleOn && crateItems.length > 1) { let i; do { i = Math.floor(Math.random()*crateItems.length); } while(i===cur); playCrateByVisualIndex(i); } else playCrateByVisualIndex(cur + 1); }
+  function goPrev() { if (!isReady || !crateItems.length) return; const cur = getVisualIndex(); if (shuffleOn && crateItems.length > 1) { let i; do { i = Math.floor(Math.random()*crateItems.length); } while(i===cur); playCrateByVisualIndex(i); } else playCrateByVisualIndex(cur - 1); }
   els.nextBtn.addEventListener('click', goNext); els.prevBtn.addEventListener('click', goPrev);
   els.fsPlayBtn.addEventListener('click', togglePlay); els.fsPrevBtn.addEventListener('click', goPrev); els.fsNextBtn.addEventListener('click', goNext);
 
@@ -1517,44 +1431,8 @@
     if (player.isMuted()) { player.unMute(); player.setVolume(lastVolume||70); updateVolumeUI(lastVolume||70,false); }
     else { lastVolume = player.getVolume()||lastVolume; player.mute(); updateVolumeUI(0,true); }
   });
-  /* ============================================================
-     SEEK BAR — click to jump, press-and-drag to scrub
-     ============================================================ */
-  function setupSeekBar(barEl, fillEl, knobEl, curTimeEl) {
-    let dragging = false;
-    const state = { isDragging: () => dragging };
-    function pctFromEvent(ev) {
-      const r = barEl.getBoundingClientRect();
-      const x = ev.clientX - r.left;
-      return Math.max(0, Math.min(1, r.width ? x / r.width : 0));
-    }
-    function paint(pct) {
-      const p = (pct*100);
-      fillEl.style.width = p + '%';
-      if (knobEl) knobEl.style.left = p + '%';
-      if (curTimeEl && isReady) curTimeEl.textContent = fmtTime((player.getDuration()||0) * pct);
-    }
-    function onDown(ev) {
-      if (!isReady) return;
-      dragging = true; barEl.classList.add('dragging');
-      try { barEl.setPointerCapture(ev.pointerId); } catch(e){}
-      paint(pctFromEvent(ev));
-      ev.preventDefault();
-    }
-    function onMove(ev) { if (dragging) paint(pctFromEvent(ev)); }
-    function onUp(ev) {
-      if (!dragging) return;
-      dragging = false; barEl.classList.remove('dragging');
-      if (isReady) player.seekTo((player.getDuration()||0) * pctFromEvent(ev), true);
-    }
-    barEl.addEventListener('pointerdown', onDown);
-    barEl.addEventListener('pointermove', onMove);
-    barEl.addEventListener('pointerup', onUp);
-    barEl.addEventListener('pointercancel', () => { dragging = false; barEl.classList.remove('dragging'); });
-    return state;
-  }
-  const barDrag = setupSeekBar(els.bar, els.barFill, els.barKnob, els.curTime);
-  const fsBarDrag = setupSeekBar(els.fsBar, els.fsBarFill, els.fsBarKnob, els.fsCurTime);
+  els.bar.addEventListener('click', ev => { if (!isReady) return; const r = els.bar.getBoundingClientRect(); player.seekTo((player.getDuration()||0) * ((ev.clientX - r.left)/r.width), true); });
+  els.fsBar.addEventListener('click', ev => { if (!isReady) return; const r = els.fsBar.getBoundingClientRect(); player.seekTo((player.getDuration()||0) * ((ev.clientX - r.left)/r.width), true); });
 
   /* ============================================================
      PLAYLIST SAVING & CRATE
@@ -1600,7 +1478,6 @@
     ids.forEach((videoId, idx) => {
       const item = document.createElement('div'); item.className = 'record-item';
       item.innerHTML = '<div class="mini-disc"><div class="mini-disc-cover" style="background-image:url(https://img.youtube.com/vi/'+videoId+'/mqdefault.jpg)"></div></div><div class="mini-name">第 '+(idx+1)+' 首</div>';
-      item.style.animationDelay = (Math.min(idx, 18) * 0.035) + 's';
       item.addEventListener('click', () => { if(isReady) player.playVideoAt(idx); });
       els.crateScroll.insertBefore(item, pads[1]);
       crateItems.push({videoId, ytIndex:idx, el:item, nameEl:item.querySelector('.mini-name')});
