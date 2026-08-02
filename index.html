@@ -85,12 +85,12 @@
 
   /* Theme: Retro Green */
   [data-theme="retro"] {
-    --espresso: #0C2218;
-    --dark-roast: #133425;
-    --americano: #1A4732;
-    --mocha: #235F43;
-    --walnut: #2D7B57;
-    --cinnamon: #3BA071;
+    --espresso: #060F0A;
+    --dark-roast: #0A1E14;
+    --americano: #0F2C1D;
+    --mocha: #163D28;
+    --walnut: #1F5638;
+    --cinnamon: #2C7850;
     --cream: #F0FDF4;
     --cream-dim: #D1FAE5;
     --cream-muted: #A7F3D0;
@@ -100,10 +100,10 @@
     --brass: #D6AE51;
     --brass-bright: #E2C98D;
     --terracotta: #E2725B;
-    --shadow: rgba(10, 31, 21, 0.5);
+    --shadow: rgba(3, 12, 8, 0.6);
   }
-  html[data-theme="retro"], [data-theme="retro"] body { background: radial-gradient(circle at 50% 20%, #216345 0%, #133726 55%, #081610 100%); }
-  [data-theme="retro"] .fs-overlay:fullscreen { background: linear-gradient(rgba(8,22,16,0.75), rgba(8,22,16,0.85)), radial-gradient(circle at 50% 20%, #216345 0%, #133726 55%, #081610 100%); }
+  html[data-theme="retro"], [data-theme="retro"] body { background: radial-gradient(circle at 50% 20%, #123822 0%, #081810 55%, #020806 100%); }
+  [data-theme="retro"] .fs-overlay:fullscreen { background: linear-gradient(rgba(2,8,6,0.8), rgba(2,8,6,0.88)), radial-gradient(circle at 50% 20%, #123822 0%, #081810 55%, #020806 100%); }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -482,9 +482,11 @@
     flex: 1; height: 4px;
     background: rgba(0,0,0,0.25);
     border-radius: 2px; position: relative; cursor: pointer;
+    touch-action: none; padding: 10px 0; margin: -10px 0;
+    background-clip: content-box; box-sizing: content-box;
   }
   .bar-fill {
-    position: absolute; left: 0; top: 0; bottom: 0;
+    position: absolute; left: 0; top: 10px; bottom: 10px;
     width: 0%; border-radius: 2px;
     background: linear-gradient(90deg, var(--brass), var(--brass-bright));
   }
@@ -496,7 +498,8 @@
     box-shadow: 0 0 0 3px rgba(0,0,0,0.3);
     transition: transform .1s;
   }
-  .bar:hover .bar-knob { transform: translate(-50%,-50%) scale(1.3); }
+  .bar:hover .bar-knob, .bar.dragging .bar-knob { transform: translate(-50%,-50%) scale(1.3); }
+  .bar.dragging .bar-knob { transform: translate(-50%,-50%) scale(1.5); box-shadow: 0 0 0 5px rgba(0,0,0,0.35); }
   .controls {
     display: flex; align-items: center; justify-content: center; gap: 14px;
   }
@@ -789,8 +792,17 @@
   }
   .fs-progress { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; }
   .fs-progress .time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--fs-text-dim); width: 36px; text-align: center; flex-shrink: 0; }
-  .fs-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; position: relative; min-width: 80px; cursor: pointer; }
-  .fs-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; border-radius: 2px; background: linear-gradient(90deg, var(--brass), var(--brass-bright)); }
+  .fs-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; position: relative; min-width: 80px; cursor: pointer; touch-action: none; padding: 10px 0; margin: -10px 0; background-clip: content-box; box-sizing: content-box; }
+  .fs-bar-fill { position: absolute; left: 0; top: 10px; bottom: 10px; width: 0%; border-radius: 2px; background: linear-gradient(90deg, var(--brass), var(--brass-bright)); }
+  .fs-bar-knob {
+    position: absolute; top: 50%; width: 10px; height: 10px;
+    background: var(--brass-bright); border-radius: 50%;
+    transform: translate(-50%, -50%); left: 0%;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.35);
+    opacity: 0; transition: opacity .15s, transform .1s;
+  }
+  .fs-bar:hover .fs-bar-knob, .fs-bar.dragging .fs-bar-knob { opacity: 1; }
+  .fs-bar.dragging .fs-bar-knob { transform: translate(-50%,-50%) scale(1.5); }
 
   /* Audio Spectrum */
   .fs-spectrum {
@@ -1046,7 +1058,7 @@
     background-color: var(--terracotta);
     background-size: cover; background-position: center;
   }
-  .mini-player-info { flex: 1; min-width: 0; padding: 8px 0; }
+  .mini-player-info { flex: 1; min-width: 0; padding: 8px 0; cursor: pointer; }
   .mini-player-title {
     font-size: 13px; font-weight: 600; color: var(--cream);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1079,6 +1091,59 @@
     transition: color .2s; display: flex; align-items: center;
   }
   .mini-expand:hover { color: var(--cream); }
+
+  /* Mini-player Apple-Music-style lyrics sheet */
+  .mini-lyrics-sheet {
+    position: fixed; inset: 0; z-index: 190;
+    background: linear-gradient(180deg, var(--dark-roast) 0%, var(--espresso) 100%);
+    display: flex; flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.45s cubic-bezier(0.22,1,0.36,1);
+    pointer-events: none;
+  }
+  .mini-lyrics-sheet.open { transform: translateY(0); pointer-events: auto; }
+  .mini-lyrics-header {
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    padding: max(20px, env(safe-area-inset-top, 20px)) 16px 14px;
+  }
+  .mini-lyrics-art {
+    width: 46px; height: 46px; border-radius: 8px; flex-shrink: 0;
+    background-color: var(--terracotta); background-size: cover; background-position: center;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+  }
+  .mini-lyrics-meta { flex: 1; min-width: 0; }
+  .mini-lyrics-title { font-size: 14px; font-weight: 600; color: var(--cream); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-lyrics-artist { font-size: 11px; color: var(--cream-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'JetBrains Mono','SF Mono',Menlo,monospace; }
+  .mini-lyrics-close {
+    background: none; border: none; color: var(--cream-dim); cursor: pointer;
+    padding: 8px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    transition: color .2s, background .2s; flex-shrink: 0;
+  }
+  .mini-lyrics-close:hover { color: var(--cream); background: rgba(255,255,255,0.08); }
+  .mini-lyrics-body {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 12vh 30px 45vh; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10%, #000 80%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 10%, #000 80%, transparent 100%);
+  }
+  .mini-lyrics-body::-webkit-scrollbar { display: none; }
+  .mini-lyrics-line {
+    font-size: 20px; font-weight: 700; line-height: 1.5; color: var(--cream-muted);
+    padding: 9px 0; filter: blur(2px); opacity: 0.32;
+    transform: scale(0.94); transform-origin: left center;
+    transition: color .45s ease, opacity .45s ease, filter .45s ease, transform .45s cubic-bezier(0.22,1,0.36,1);
+  }
+  .mini-lyrics-line.near { opacity: 0.6; filter: blur(0.6px); }
+  .mini-lyrics-line.active {
+    color: var(--cream); opacity: 1; filter: blur(0); transform: scale(1.08);
+    text-shadow: 0 0 20px rgba(255,255,255,0.2);
+    animation: miniLyricPop .55s cubic-bezier(0.22,1,0.36,1);
+  }
+  @keyframes miniLyricPop { 0% { transform: scale(0.92); } 55% { transform: scale(1.12); } 100% { transform: scale(1.08); } }
+  .mini-lyrics-placeholder { color: var(--cream-dim); text-align: center; margin-top: 32vh; font-size: 14px; }
+  @media (prefers-reduced-motion: reduce) {
+    .mini-lyrics-line, .mini-lyrics-line.active { animation: none; transition: opacity .2s, color .2s; transform: none; filter: none; }
+  }
 
   body.mini-player-active .stage { display: none; }
   body.mini-player-active .settings-fab { bottom: 80px; }
@@ -1192,7 +1257,7 @@
         </div>
         <div class="fs-progress">
           <span class="time" id="fsCurTime">0:00</span>
-          <div class="fs-bar" id="fsBar"><div class="fs-bar-fill" id="fsBarFill"></div></div>
+          <div class="fs-bar" id="fsBar"><div class="fs-bar-fill" id="fsBarFill"></div><div class="fs-bar-knob" id="fsBarKnob"></div></div>
           <span class="time" id="fsDurTime">0:00</span>
         </div>
       </div>
@@ -1370,7 +1435,7 @@
 <div class="mini-player" id="miniPlayer">
   <div class="mini-player-progress-top"><div class="mini-player-progress-fill" id="miniProgressFill"></div></div>
   <div class="mini-player-art" id="miniPlayerArt"></div>
-  <div class="mini-player-info">
+  <div class="mini-player-info" id="miniPlayerInfo" title="顯示歌詞">
     <div class="mini-player-title" id="miniPlayerTitle">—</div>
     <div class="mini-player-artist" id="miniPlayerArtist">—</div>
   </div>
@@ -1390,6 +1455,23 @@
   </button>
 </div>
 
+<!-- MINI PLAYER LYRICS SHEET (Apple Music style) -->
+<div class="mini-lyrics-sheet" id="miniLyricsSheet">
+  <div class="mini-lyrics-header" id="miniLyricsHeader">
+    <div class="mini-lyrics-art" id="miniLyricsArt"></div>
+    <div class="mini-lyrics-meta">
+      <div class="mini-lyrics-title" id="miniLyricsTitle">—</div>
+      <div class="mini-lyrics-artist" id="miniLyricsArtist">—</div>
+    </div>
+    <button class="mini-lyrics-close" id="miniLyricsCloseBtn" title="關閉歌詞">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+    </button>
+  </div>
+  <div class="mini-lyrics-body" id="miniLyricsBody">
+    <div class="mini-lyrics-placeholder">播放歌曲後自動顯示歌詞</div>
+  </div>
+</div>
+
 <!-- GESTURE FEEDBACK -->
 <div class="gesture-feedback" id="gestureFeedback"></div>
 
@@ -1403,11 +1485,12 @@
   let crateItems = [], crateIndex = -1;
   let userScrolling = false, userScrollTimer = null, programmaticScroll = false, accordionRaf = null;
   let shuffleOn = false, loopMode = 'off', lastVolume = 70;
+  let mainBarSeeking = false, fsBarSeeking = false;
   let lyricsOpen = false, currentLyricsData = null, lastLyricsVideoId = '';
   let fsOpen = false, fsParticlesCreated = false, specTimer = null;
   let dragState = null;
   let sleepTimerEnd = 0, sleepTimerInterval = null, baseStatus = '準備就緒';
-  let miniPlayerOpen = false, lyricsSizeOffset = 0;
+  let miniPlayerOpen = false, lyricsSizeOffset = 0, miniLyricsOpen = false;
 
   const els = {
     disc: document.getElementById('disc'), tonearm: document.getElementById('tonearm'),
@@ -1429,6 +1512,7 @@
     lyricsClose: document.getElementById('lyricsClose'), fsOverlay: document.getElementById('fsOverlay'),
     fsTitle: document.getElementById('fsTitle'), fsArtist: document.getElementById('fsArtist'),
     fsAlbumImg: document.getElementById('fsAlbumImg'), fsBarFill: document.getElementById('fsBarFill'),
+    fsBarKnob: document.getElementById('fsBarKnob'),
     fsBar: document.getElementById('fsBar'), fsCurTime: document.getElementById('fsCurTime'),
     fsDurTime: document.getElementById('fsDurTime'), fsCloseBtn: document.getElementById('fsCloseBtn'),
     fsParticles: document.getElementById('fsParticles'), fsBtn: document.getElementById('fsBtn'),
@@ -1456,6 +1540,14 @@
     miniNextBtn: document.getElementById('miniNextBtn'),
     miniExpandBtn: document.getElementById('miniExpandBtn'),
     miniPlayerBtn: document.getElementById('miniPlayerBtn'),
+    miniPlayerInfo: document.getElementById('miniPlayerInfo'),
+    miniLyricsSheet: document.getElementById('miniLyricsSheet'),
+    miniLyricsHeader: document.getElementById('miniLyricsHeader'),
+    miniLyricsArt: document.getElementById('miniLyricsArt'),
+    miniLyricsTitle: document.getElementById('miniLyricsTitle'),
+    miniLyricsArtist: document.getElementById('miniLyricsArtist'),
+    miniLyricsBody: document.getElementById('miniLyricsBody'),
+    miniLyricsCloseBtn: document.getElementById('miniLyricsCloseBtn'),
     gestureFeedback: document.getElementById('gestureFeedback')
   };
 
@@ -1635,14 +1727,21 @@
       if (!isReady) return;
       const cur = player.getCurrentTime() || 0, dur = player.getDuration() || 0;
       const pct = dur > 0 ? (cur / dur) * 100 : 0;
-      els.barFill.style.width = pct + '%'; els.barKnob.style.left = pct + '%';
-      els.curTime.textContent = fmtTime(cur); els.durTime.textContent = fmtTime(dur);
-      els.fsBarFill.style.width = pct + '%';
-      els.fsCurTime.textContent = fmtTime(cur); els.fsDurTime.textContent = fmtTime(dur);
+      if (!mainBarSeeking) {
+        els.barFill.style.width = pct + '%'; els.barKnob.style.left = pct + '%';
+        els.curTime.textContent = fmtTime(cur);
+      }
+      els.durTime.textContent = fmtTime(dur);
+      if (!fsBarSeeking) {
+        els.fsBarFill.style.width = pct + '%'; els.fsBarKnob.style.left = pct + '%';
+        els.fsCurTime.textContent = fmtTime(cur);
+      }
+      els.fsDurTime.textContent = fmtTime(dur);
       if (miniPlayerOpen) els.miniProgressFill.style.width = pct + '%';
       if (currentLyricsData && currentLyricsData.synced) {
         if (lyricsOpen) highlightLyricLine(cur);
         if (fsOpen) highlightFsLyrics(cur);
+        if (miniLyricsOpen) highlightMiniLyrics(cur);
       }
     }, 300);
   }
@@ -1688,8 +1787,41 @@
     else { lastVolume = player.getVolume()||lastVolume; player.mute(); updateVolumeUI(0,true); }
   }
   els.muteBtn.addEventListener('click', toggleMute);
-  els.bar.addEventListener('click', ev => { if (!isReady) return; const r = els.bar.getBoundingClientRect(); player.seekTo((player.getDuration()||0) * ((ev.clientX - r.left)/r.width), true); });
-  els.fsBar.addEventListener('click', ev => { if (!isReady) return; const r = els.fsBar.getBoundingClientRect(); player.seekTo((player.getDuration()||0) * ((ev.clientX - r.left)/r.width), true); });
+  function setupSeekBar(barEl, fillEl, knobEl, timeEl, seekingFlagSetter) {
+    let dragging = false;
+    function pctFromEvent(ev) {
+      const r = barEl.getBoundingClientRect();
+      const x = Math.max(0, Math.min(r.width, ev.clientX - r.left));
+      return r.width ? x / r.width : 0;
+    }
+    function paint(pct) {
+      const p = pct * 100;
+      fillEl.style.width = p + '%';
+      if (knobEl) knobEl.style.left = p + '%';
+      if (timeEl && isReady) timeEl.textContent = fmtTime((player.getDuration() || 0) * pct);
+    }
+    barEl.addEventListener('pointerdown', ev => {
+      if (!isReady) return;
+      dragging = true; seekingFlagSetter(true);
+      barEl.classList.add('dragging');
+      try { barEl.setPointerCapture(ev.pointerId); } catch (e) {}
+      paint(pctFromEvent(ev));
+      ev.preventDefault();
+    });
+    barEl.addEventListener('pointermove', ev => { if (dragging) paint(pctFromEvent(ev)); });
+    function finish(ev) {
+      if (!dragging) return;
+      dragging = false; seekingFlagSetter(false);
+      barEl.classList.remove('dragging');
+      if (isReady) player.seekTo((player.getDuration() || 0) * pctFromEvent(ev), true);
+    }
+    barEl.addEventListener('pointerup', finish);
+    barEl.addEventListener('pointercancel', () => { dragging = false; seekingFlagSetter(false); barEl.classList.remove('dragging'); });
+    // Fallback for simple taps (also covers browsers where pointerup/up land outside the element)
+    barEl.addEventListener('click', ev => { if (!isReady || dragging) return; player.seekTo((player.getDuration() || 0) * pctFromEvent(ev), true); });
+  }
+  setupSeekBar(els.bar, els.barFill, els.barKnob, els.curTime, v => { mainBarSeeking = v; });
+  setupSeekBar(els.fsBar, els.fsBarFill, els.fsBarKnob, els.fsCurTime, v => { fsBarSeeking = v; });
 
   /* ============================================================
      PLAYLIST SAVING & CRATE
@@ -1905,7 +2037,7 @@
   }
   async function fetchLyrics(videoTitle, author) {
     if (!videoTitle) return; const info = parseSongInfo(videoTitle);
-    els.lyricsBody.innerHTML = '<p class="lyrics-placeholder">搜尋歌詞中…</p>'; els.fsLyrics.innerHTML = '<div class="fs-lyrics-placeholder">搜尋歌詞中…</div>';
+    els.lyricsBody.innerHTML = '<p class="lyrics-placeholder">搜尋歌詞中…</p>'; els.fsLyrics.innerHTML = '<div class="fs-lyrics-placeholder">搜尋歌詞中…</div>'; els.miniLyricsBody.innerHTML = '<div class="mini-lyrics-placeholder">搜尋歌詞中…</div>';
     try {
       let q = info.title; if(info.artist) q = info.artist+' '+info.title;
       const res = await fetch('https://lrclib.net/api/search?q='+encodeURIComponent(q)); if (!res.ok) throw new Error('API error');
@@ -1913,26 +2045,28 @@
       if (!results.length) {
         const res2 = await fetch('https://lrclib.net/api/search?q='+encodeURIComponent(info.title));
         if (res2.ok) { const r2=await res2.json(); if(r2.length){displayLyrics(r2[0]);return;} }
-        els.lyricsBody.innerHTML='<p class="lyrics-placeholder">未找到歌詞</p>'; els.fsLyrics.innerHTML='<div class="fs-lyrics-placeholder">未找到歌詞</div>'; currentLyricsData=null; return;
+        els.lyricsBody.innerHTML='<p class="lyrics-placeholder">未找到歌詞</p>'; els.fsLyrics.innerHTML='<div class="fs-lyrics-placeholder">未找到歌詞</div>'; els.miniLyricsBody.innerHTML='<div class="mini-lyrics-placeholder">未找到歌詞</div>'; currentLyricsData=null; return;
       }
       displayLyrics(results.find(r=>r.syncedLyrics)||results[0]);
-    } catch(err) { els.lyricsBody.innerHTML='<p class="lyrics-placeholder">搜尋歌詞失敗</p>'; els.fsLyrics.innerHTML='<div class="fs-lyrics-placeholder">搜尋歌詞失敗</div>'; currentLyricsData=null; }
+    } catch(err) { els.lyricsBody.innerHTML='<p class="lyrics-placeholder">搜尋歌詞失敗</p>'; els.fsLyrics.innerHTML='<div class="fs-lyrics-placeholder">搜尋歌詞失敗</div>'; els.miniLyricsBody.innerHTML='<div class="mini-lyrics-placeholder">搜尋歌詞失敗</div>'; currentLyricsData=null; }
   }
   function displayLyrics(data) {
-    els.lyricsBody.innerHTML=''; els.fsLyrics.innerHTML=''; currentLyricsData=null;
+    els.lyricsBody.innerHTML=''; els.fsLyrics.innerHTML=''; els.miniLyricsBody.innerHTML=''; currentLyricsData=null;
     if (data.syncedLyrics) {
       const parsed = parseLRC(data.syncedLyrics); currentLyricsData = {synced:parsed};
       parsed.forEach((line,idx) => {
         const el=document.createElement('div'); el.className='lyrics-line'; el.textContent=line.text; el.dataset.idx=idx; els.lyricsBody.appendChild(el);
         const el2=document.createElement('div'); el2.className='fs-lyrics-line'; el2.textContent=line.text; el2.dataset.idx=idx; els.fsLyrics.appendChild(el2);
+        const el3=document.createElement('div'); el3.className='mini-lyrics-line'; el3.textContent=line.text; el3.dataset.idx=idx; els.miniLyricsBody.appendChild(el3);
       });
     } else if (data.plainLyrics) {
       currentLyricsData = {plain:data.plainLyrics};
       data.plainLyrics.split('\n').forEach(line => {
         const el=document.createElement('div'); el.className='lyrics-line'; el.textContent=line||'\u00A0'; els.lyricsBody.appendChild(el);
         const el2=document.createElement('div'); el2.className='fs-lyrics-line'; el2.textContent=line||'\u00A0'; els.fsLyrics.appendChild(el2);
+        const el3=document.createElement('div'); el3.className='mini-lyrics-line'; el3.textContent=line||'\u00A0'; els.miniLyricsBody.appendChild(el3);
       });
-    } else { els.lyricsBody.innerHTML='<p class="lyrics-placeholder">未找到歌詞</p>'; els.fsLyrics.innerHTML='<div class="fs-lyrics-placeholder">未找到歌詞</div>'; }
+    } else { els.lyricsBody.innerHTML='<p class="lyrics-placeholder">未找到歌詞</p>'; els.fsLyrics.innerHTML='<div class="fs-lyrics-placeholder">未找到歌詞</div>'; els.miniLyricsBody.innerHTML='<div class="mini-lyrics-placeholder">未找到歌詞</div>'; }
   }
   function highlightLyricLine(t) {
     if (!currentLyricsData||!currentLyricsData.synced) return;
@@ -1944,6 +2078,13 @@
     if (!currentLyricsData||!currentLyricsData.synced) return;
     let ai=-1; for(let i=currentLyricsData.synced.length-1;i>=0;i--){if(t>=currentLyricsData.synced[i].time){ai=i;break;}}
     const lineEls = els.fsLyrics.querySelectorAll('.fs-lyrics-line');
+    lineEls.forEach((el,i) => { el.classList.toggle('active',i===ai); el.classList.toggle('near', Math.abs(i-ai)<=1 && i!==ai); });
+    if (ai>=0 && lineEls[ai]) lineEls[ai].scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  function highlightMiniLyrics(t) {
+    if (!currentLyricsData||!currentLyricsData.synced) return;
+    let ai=-1; for(let i=currentLyricsData.synced.length-1;i>=0;i--){if(t>=currentLyricsData.synced[i].time){ai=i;break;}}
+    const lineEls = els.miniLyricsBody.querySelectorAll('.mini-lyrics-line');
     lineEls.forEach((el,i) => { el.classList.toggle('active',i===ai); el.classList.toggle('near', Math.abs(i-ai)<=1 && i!==ai); });
     if (ai>=0 && lineEls[ai]) lineEls[ai].scrollIntoView({behavior:'smooth',block:'center'});
   }
@@ -2116,12 +2257,47 @@
       els.miniPlayerTitle.textContent = data.title || '—';
       els.miniPlayerArtist.textContent = cleanAuthor(data.author) || '—';
       if (data.video_id) els.miniPlayerArt.style.backgroundImage = 'url(https://img.youtube.com/vi/' + data.video_id + '/mqdefault.jpg)';
+      els.miniLyricsTitle.textContent = data.title || '—';
+      els.miniLyricsArtist.textContent = cleanAuthor(data.author) || '—';
+      if (data.video_id) els.miniLyricsArt.style.backgroundImage = 'url(https://img.youtube.com/vi/' + data.video_id + '/mqdefault.jpg)';
     } catch(e) {}
     const playing = isReady && player.getPlayerState() === YT.PlayerState.PLAYING;
     els.miniPlayBtn.innerHTML = playing ?
       '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>' :
       '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
   }
+
+  /* Mini-player lyrics sheet (tap the title/artist area to open) */
+  els.miniPlayerInfo.addEventListener('click', toggleMiniLyrics);
+  els.miniLyricsCloseBtn.addEventListener('click', toggleMiniLyrics);
+  function toggleMiniLyrics() {
+    miniLyricsOpen = !miniLyricsOpen;
+    els.miniLyricsSheet.classList.toggle('open', miniLyricsOpen);
+    if (miniLyricsOpen) {
+      syncMiniLyricsMeta();
+      if (isReady) highlightMiniLyrics(player.getCurrentTime() || 0);
+    }
+  }
+  function syncMiniLyricsMeta() {
+    if (!isReady) return;
+    try {
+      const data = player.getVideoData();
+      els.miniLyricsTitle.textContent = data.title || '—';
+      els.miniLyricsArtist.textContent = cleanAuthor(data.author) || '—';
+      if (data.video_id) els.miniLyricsArt.style.backgroundImage = 'url(https://img.youtube.com/vi/' + data.video_id + '/mqdefault.jpg)';
+    } catch(e) {}
+  }
+  (function initMiniLyricsSwipe() {
+    let startY = 0, startTime = 0, tracking = false;
+    els.miniLyricsHeader.addEventListener('touchstart', e => {
+      startY = e.touches[0].clientY; startTime = Date.now(); tracking = true;
+    }, { passive: true });
+    els.miniLyricsHeader.addEventListener('touchend', e => {
+      if (!tracking) return; tracking = false;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (dy > 60 && Date.now() - startTime < 600 && miniLyricsOpen) toggleMiniLyrics();
+    }, { passive: true });
+  })();
 
   /* Cover wall staggered animation */
   new MutationObserver(() => {
