@@ -656,7 +656,7 @@
     position: absolute; inset: 0; border-radius: 12px; cursor: pointer;
     overflow: hidden; background: #111;
     box-shadow: 0 14px 24px -8px rgba(0,0,0,0.65), 0 4px 8px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.06);
-    transition: box-shadow .3s, border-color .3s;
+    transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s, border-color .3s;
     border: 1px solid rgba(255,255,255,0.05);
     transform-origin: 50% 50%;
     transform: rotateX(25deg) translateZ(0);
@@ -2025,53 +2025,42 @@
   /* ============================================================
      COVER WALL MODE
      ============================================================ */
-  let cwWheelRAF = null;
-  let cwCards = [];       // cached .cw-card elements, in item order
-  let cwItemTops = [];    // each item's real top offset within the grid's scrollable content (measured once)
-  let cwItemH = 180;
-  let cwGridRect = null;  // the grid container's own rect — doesn't move when its content is scrolled, so cache it too
+  let cwObserver = null;
 
-  function computeCwLayout() {
-    const items = els.cwGrid.querySelectorAll('.cw-item');
-    cwGridRect = els.cwGrid.getBoundingClientRect();
-    const scrollTop = els.cwGrid.scrollTop;
-    cwCards = []; cwItemTops = [];
-    items.forEach((item, i) => {
-      const r = item.getBoundingClientRect(); // measured once here, never during scroll
-      cwCards.push(item.querySelector('.cw-card'));
-      cwItemTops.push(r.top - cwGridRect.top + scrollTop);
-      if (i === 0) cwItemH = r.height || 180;
-    });
+  function applyCwDepth(card, ratio) {
+    const dist = Math.abs(ratio);
+    const angle = ratio * -34;          // wheel-picker curvature (convex), flat at center — stays smooth/continuous for the visual cascade
+    const scale = 1 - dist * 0.28;
+    const zTranslate = -dist * 160;      // push receding cards back in real 3D space
+    card.style.transform = 'rotateX(' + angle.toFixed(2) + 'deg) translateZ(' + zTranslate.toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
+    card.style.setProperty('--cw-shade', (dist * 0.35).toFixed(2));
+    // z-index is quantized into 3 widely-spaced tiers (not a continuous gradient) so two neighboring
+    // rows can never end up close enough in stacking order to make clicks land on the wrong one.
+    card.style.zIndex = dist < 0.12 ? 300 : dist < 0.35 ? 150 : 10;
   }
 
-  function updateCoverWallWheel() {
-    if (!cwGridRect || !cwCards.length) return;
-    const centerY = cwGridRect.top + cwGridRect.height / 2;
-    const maxDist = cwGridRect.height / 2 + 90;
-    const scrollTop = els.cwGrid.scrollTop; // cheap: reading scrollTop doesn't force a layout the way getBoundingClientRect does
-    for (let i = 0; i < cwCards.length; i++) {
-      const card = cwCards[i];
-      const itemCenterY = cwGridRect.top + (cwItemTops[i] - scrollTop) + cwItemH / 2;
-      const ratio = Math.max(-1, Math.min(1, (itemCenterY - centerY) / maxDist));
-      const dist = Math.abs(ratio);
-      const angle = ratio * -34;          // wheel-picker curvature (convex), flat at center
-      const scale = 1 - dist * 0.28;
-      const zTranslate = -dist * 160;      // push receding cards back in 3D space (real depth, not a rotateZ spin)
-      card.style.transform = 'rotateX(' + angle.toFixed(2) + 'deg) translateZ(' + zTranslate.toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
-      card.style.setProperty('--cw-shade', (dist * 0.35).toFixed(2));
-      card.style.zIndex = Math.round((1 - dist) * 100);
-    }
+  function setupCwObserver() {
+    if (cwObserver) cwObserver.disconnect();
+    const thresholds = [];
+    for (let i = 0; i <= 20; i++) thresholds.push(i / 20);
+    cwObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const root = entry.rootBounds;
+        if (!root) return;
+        const centerY = root.top + root.height / 2;
+        const maxDist = root.height / 2 + 90;
+        const itemCenterY = entry.boundingClientRect.top + entry.boundingClientRect.height / 2;
+        const ratio = Math.max(-1, Math.min(1, (itemCenterY - centerY) / maxDist));
+        applyCwDepth(entry.target.querySelector('.cw-card'), ratio);
+      });
+    }, { root: els.cwGrid, threshold: thresholds });
+    els.cwGrid.querySelectorAll('.cw-item').forEach(item => cwObserver.observe(item));
   }
-  function requestCoverWallWheelUpdate() {
-    if (cwWheelRAF) return;
-    cwWheelRAF = requestAnimationFrame(() => { cwWheelRAF = null; updateCoverWallWheel(); });
-  }
-  els.cwGrid.addEventListener('scroll', requestCoverWallWheelUpdate, { passive: true });
-  window.addEventListener('resize', () => { if (els.coverWallOverlay.classList.contains('open')) { computeCwLayout(); requestCoverWallWheelUpdate(); } });
 
   function setCoverWallOpen(open) {
     els.coverWallOverlay.classList.toggle('open', open);
     els.settingsFab.style.display = open ? 'none' : '';
+    if (!open && cwObserver) { cwObserver.disconnect(); cwObserver = null; }
   }
 
   els.coverWallOpenBtn.addEventListener('click', () => {
@@ -2088,10 +2077,9 @@
         frag.appendChild(d);
       });
       els.cwGrid.appendChild(frag);
-      computeCwLayout();
       const activeItem = els.cwGrid.querySelector('.cw-item.active');
       if (activeItem) activeItem.scrollIntoView({ block: 'center' });
-      updateCoverWallWheel();
+      setupCwObserver();
     });
   });
   els.cwCloseBtn.addEventListener('click', () => setCoverWallOpen(false));
