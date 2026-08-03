@@ -2026,39 +2026,14 @@
      COVER WALL MODE
      ============================================================ */
   let cwWheelRAF = null;
-  let cwGeom = { cols: 1, rowH: 90, itemH: 180, padTop: 40 };
-  function computeCwGeometry() {
-    const items = els.cwGrid.querySelectorAll('.cw-item');
-    if (!items.length) return;
-    const gridRect = els.cwGrid.getBoundingClientRect();
-    const scrollTop = els.cwGrid.scrollTop;
-    const rect0 = items[0].getBoundingClientRect();
-    let cols = items.length;
-    for (let i = 1; i < items.length; i++) {
-      if (Math.abs(items[i].getBoundingClientRect().top - rect0.top) > 1) { cols = i; break; }
-    }
-    let rowH = 90;
-    if (items.length > cols) rowH = items[cols].getBoundingClientRect().top - rect0.top;
-    cwGeom = {
-      cols: cols || 1,
-      rowH: rowH || 90,
-      itemH: rect0.height || 180,
-      padTop: (rect0.top - gridRect.top) + scrollTop
-    };
-  }
   function updateCoverWallWheel() {
     const gridRect = els.cwGrid.getBoundingClientRect();
     const centerY = gridRect.top + gridRect.height / 2;
     const maxDist = gridRect.height / 2 + 90;
-    const scrollTop = els.cwGrid.scrollTop;
-    const { cols, rowH, itemH, padTop } = cwGeom;
-    els.cwGrid.querySelectorAll('.cw-item').forEach((item, idx) => {
+    els.cwGrid.querySelectorAll('.cw-item').forEach(item => {
       const card = item.querySelector('.cw-card');
-      // real, measured geometry (not guessed constants) — so the "which row is centered" math
-      // can't drift out of sync with the actual grid layout.
-      const row = Math.floor(idx / cols);
-      const itemTopInGrid = padTop + row * rowH;
-      const itemCenterY = gridRect.top + (itemTopInGrid - scrollTop) + itemH / 2;
+      const r = item.getBoundingClientRect(); // real on-screen position — no guessed row/col math, so it can never drift out of sync
+      const itemCenterY = r.top + r.height / 2;
       const ratio = Math.max(-1, Math.min(1, (itemCenterY - centerY) / maxDist));
       const dist = Math.abs(ratio);
       const angle = ratio * -34;          // wheel-picker curvature (convex), flat at center
@@ -2074,7 +2049,7 @@
     cwWheelRAF = requestAnimationFrame(() => { cwWheelRAF = null; updateCoverWallWheel(); });
   }
   els.cwGrid.addEventListener('scroll', requestCoverWallWheelUpdate, { passive: true });
-  window.addEventListener('resize', () => { if (els.coverWallOverlay.classList.contains('open')) { computeCwGeometry(); requestCoverWallWheelUpdate(); } });
+  window.addEventListener('resize', () => { if (els.coverWallOverlay.classList.contains('open')) requestCoverWallWheelUpdate(); });
 
   function setCoverWallOpen(open) {
     els.coverWallOverlay.classList.toggle('open', open);
@@ -2095,7 +2070,6 @@
         frag.appendChild(d);
       });
       els.cwGrid.appendChild(frag);
-      computeCwGeometry();
       const activeItem = els.cwGrid.querySelector('.cw-item.active');
       if (activeItem) activeItem.scrollIntoView({ block: 'center' });
       updateCoverWallWheel();
