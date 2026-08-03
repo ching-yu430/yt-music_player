@@ -656,7 +656,7 @@
     position: absolute; inset: 0; border-radius: 12px; cursor: pointer;
     overflow: hidden; background: #111;
     box-shadow: 0 14px 24px -8px rgba(0,0,0,0.65), 0 4px 8px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.06);
-    transition: transform .16s ease-out, box-shadow .3s, border-color .3s, z-index .3s;
+    transition: box-shadow .3s, border-color .3s;
     border: 1px solid rgba(255,255,255,0.05);
     transform-origin: 50% 50%;
     transform: rotateX(25deg) translateZ(0);
@@ -667,7 +667,7 @@
     content: ''; position: absolute; inset: 0; pointer-events: none;
     background: rgba(0,0,0, var(--cw-shade, 0));
   }
-  .cw-item:hover .cw-card { transform: rotateX(0deg) translateY(-78px) translateZ(80px) scale(1.18) !important; box-shadow: 0 24px 48px rgba(0,0,0,0.85); z-index: 999 !important; }
+  .cw-item:hover .cw-card { transition: transform .18s ease-out, box-shadow .3s, border-color .3s; transform: rotateX(0deg) translateY(-78px) translateZ(80px) scale(1.18) !important; box-shadow: 0 24px 48px rgba(0,0,0,0.85); z-index: 999 !important; }
   .cw-item.active .cw-card { border-color: var(--brass-bright); box-shadow: 0 0 0 2px var(--brass-bright), 0 14px 24px -8px rgba(0,0,0,0.65), 0 4px 8px rgba(0,0,0,0.5); }
   .cw-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .cw-info {
@@ -2026,14 +2026,32 @@
      COVER WALL MODE
      ============================================================ */
   let cwWheelRAF = null;
+  let cwCards = [];       // cached .cw-card elements, in item order
+  let cwItemTops = [];    // each item's real top offset within the grid's scrollable content (measured once)
+  let cwItemH = 180;
+  let cwGridRect = null;  // the grid container's own rect — doesn't move when its content is scrolled, so cache it too
+
+  function computeCwLayout() {
+    const items = els.cwGrid.querySelectorAll('.cw-item');
+    cwGridRect = els.cwGrid.getBoundingClientRect();
+    const scrollTop = els.cwGrid.scrollTop;
+    cwCards = []; cwItemTops = [];
+    items.forEach((item, i) => {
+      const r = item.getBoundingClientRect(); // measured once here, never during scroll
+      cwCards.push(item.querySelector('.cw-card'));
+      cwItemTops.push(r.top - cwGridRect.top + scrollTop);
+      if (i === 0) cwItemH = r.height || 180;
+    });
+  }
+
   function updateCoverWallWheel() {
-    const gridRect = els.cwGrid.getBoundingClientRect();
-    const centerY = gridRect.top + gridRect.height / 2;
-    const maxDist = gridRect.height / 2 + 90;
-    els.cwGrid.querySelectorAll('.cw-item').forEach(item => {
-      const card = item.querySelector('.cw-card');
-      const r = item.getBoundingClientRect(); // real on-screen position — no guessed row/col math, so it can never drift out of sync
-      const itemCenterY = r.top + r.height / 2;
+    if (!cwGridRect || !cwCards.length) return;
+    const centerY = cwGridRect.top + cwGridRect.height / 2;
+    const maxDist = cwGridRect.height / 2 + 90;
+    const scrollTop = els.cwGrid.scrollTop; // cheap: reading scrollTop doesn't force a layout the way getBoundingClientRect does
+    for (let i = 0; i < cwCards.length; i++) {
+      const card = cwCards[i];
+      const itemCenterY = cwGridRect.top + (cwItemTops[i] - scrollTop) + cwItemH / 2;
       const ratio = Math.max(-1, Math.min(1, (itemCenterY - centerY) / maxDist));
       const dist = Math.abs(ratio);
       const angle = ratio * -34;          // wheel-picker curvature (convex), flat at center
@@ -2042,14 +2060,14 @@
       card.style.transform = 'rotateX(' + angle.toFixed(2) + 'deg) translateZ(' + zTranslate.toFixed(1) + 'px) scale(' + scale.toFixed(3) + ')';
       card.style.setProperty('--cw-shade', (dist * 0.35).toFixed(2));
       card.style.zIndex = Math.round((1 - dist) * 100);
-    });
+    }
   }
   function requestCoverWallWheelUpdate() {
     if (cwWheelRAF) return;
     cwWheelRAF = requestAnimationFrame(() => { cwWheelRAF = null; updateCoverWallWheel(); });
   }
   els.cwGrid.addEventListener('scroll', requestCoverWallWheelUpdate, { passive: true });
-  window.addEventListener('resize', () => { if (els.coverWallOverlay.classList.contains('open')) requestCoverWallWheelUpdate(); });
+  window.addEventListener('resize', () => { if (els.coverWallOverlay.classList.contains('open')) { computeCwLayout(); requestCoverWallWheelUpdate(); } });
 
   function setCoverWallOpen(open) {
     els.coverWallOverlay.classList.toggle('open', open);
@@ -2070,6 +2088,7 @@
         frag.appendChild(d);
       });
       els.cwGrid.appendChild(frag);
+      computeCwLayout();
       const activeItem = els.cwGrid.querySelector('.cw-item.active');
       if (activeItem) activeItem.scrollIntoView({ block: 'center' });
       updateCoverWallWheel();
@@ -2077,6 +2096,7 @@
   });
   els.cwCloseBtn.addEventListener('click', () => setCoverWallOpen(false));
   els.coverWallOverlay.addEventListener('click', ev => { if(ev.target === els.coverWallOverlay) setCoverWallOpen(false); });
+
 
   /* ============================================================
      AUDIO SPECTRUM (SIMULATED)
