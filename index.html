@@ -661,12 +661,12 @@
      that's plain DOM order, no z-index juggling needed; the small explicit
      z-index below only lifts the hovered/active tile above that stack. */
   .cw-item {
-    position: relative; aspect-ratio: 4 / 5; cursor: pointer;
+    position: relative; cursor: pointer;
     transform-style: preserve-3d; /* lets .cw-card's 3D transform share .cw-grid's perspective instead of being flattened */
   }
   .cw-item:hover, .cw-item:active, .cw-item.active { z-index: 5; }
   .cw-card {
-    position: absolute; inset: 0;
+    position: relative; width: 100%;
     transform-style: preserve-3d;
     transform: rotateX(-26deg);
     transition: transform .3s cubic-bezier(0.22,1,0.36,1);
@@ -682,7 +682,6 @@
     position: absolute; inset: 0; border-radius: 10px;
     background: linear-gradient(135deg, #2b2b2b, #141414);
     border: 1px solid rgba(255,255,255,0.05);
-    backface-visibility: hidden;
     transition: opacity .3s;
   }
   .cw-card-layer.l2 { transform: translate3d(7px, 8px, -16px); opacity: .5; }
@@ -691,16 +690,18 @@
   .cw-item:active .cw-card-layer,
   .cw-item.active .cw-card-layer { opacity: .2; }
   .cw-card-face {
-    position: absolute; inset: 0; border-radius: 10px; overflow: hidden;
-    background: #111; backface-visibility: hidden;
+    position: relative; width: 100%; border-radius: 10px; overflow: hidden;
+    background: #111;
     box-shadow: 0 16px 26px -10px rgba(0,0,0,0.7), 0 4px 10px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.07);
     border: 1px solid rgba(255,255,255,0.06);
     transition: box-shadow .3s, border-color .3s;
     display: flex; flex-direction: column;
   }
   .cw-item.active .cw-card-face { border-color: var(--brass-bright); box-shadow: 0 0 0 2px var(--brass-bright), 0 16px 26px -10px rgba(0,0,0,0.7), 0 4px 10px rgba(0,0,0,0.5); }
-  /* artwork keeps its own clipped region so it never bleeds into the title plate below it */
-  .cw-img-wrap { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+  /* fixed 1:1 ratio - the artwork is always a true square no matter how wide the
+     grid column is, instead of being whatever height was left over under a fixed
+     4:5 card ratio (which was only square at one exact width) */
+  .cw-img-wrap { position: relative; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; }
   .cw-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   /* song title now lives on its own plate under the artwork, like a record-sleeve label,
      instead of a gradient caption floating over the cover art */
@@ -2079,7 +2080,10 @@
       const frag = document.createDocumentFragment();
       crateItems.forEach((c, idx) => {
         const d = document.createElement('div'); d.className = 'cw-item' + (idx === crateIndex ? ' active' : '');
-        d.style.animationDelay = (idx * 0.03) + 's';
+        // Delay is based on distance from the currently-playing card (the one we scroll to below),
+        // not the item's raw index - otherwise a song deep in a long playlist would sit invisible
+        // for several seconds waiting for its huge idx-based delay to elapse.
+        d.style.animationDelay = (Math.min(Math.abs(idx - crateIndex), 20) * 0.02) + 's';
         d.innerHTML = `<div class="cw-card"><div class="cw-card-layer l2"></div><div class="cw-card-layer l1"></div><div class="cw-card-face"><div class="cw-img-wrap"><img class="cw-img" src="https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg" loading="lazy"></div><div class="cw-title-plate">${c.nameEl.textContent}</div></div></div>`;
         d.addEventListener('click', () => { if(isReady) player.playVideoAt(c.ytIndex); setCoverWallOpen(false); });
         frag.appendChild(d);
