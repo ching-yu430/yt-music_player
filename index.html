@@ -643,10 +643,15 @@
   .cw-grid {
     flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;
     padding: 46px 24px calc(160px + env(safe-area-inset-bottom));
-    display: grid; gap: 6px 16px;
+    display: grid; gap: 10px 16px;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     align-content: start;
     scrollbar-width: thin; scrollbar-color: var(--brass) transparent;
+    /* One shared camera for the whole wall (not one per card) - every tile tilts
+       away from the SAME vanishing point, so it reads as one table of cards seen
+       from above, instead of each thumbnail warping into its own trapezoid. */
+    perspective: 2400px;
+    perspective-origin: 50% -20%;
   }
   /* Static isometric card-stack tile. The tilt is a fixed value set once at
      paint time (never recomputed while scrolling), so scrolling itself only
@@ -657,13 +662,13 @@
      z-index below only lifts the hovered/active tile above that stack. */
   .cw-item {
     position: relative; aspect-ratio: 4 / 5; cursor: pointer;
-    perspective: 700px;
+    transform-style: preserve-3d; /* lets .cw-card's 3D transform share .cw-grid's perspective instead of being flattened */
   }
   .cw-item:hover, .cw-item:active, .cw-item.active { z-index: 5; }
   .cw-card {
     position: absolute; inset: 0;
     transform-style: preserve-3d;
-    transform: rotateX(-38deg);
+    transform: rotateX(-26deg);
     transition: transform .3s cubic-bezier(0.22,1,0.36,1);
     will-change: transform;
   }
